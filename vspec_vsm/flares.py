@@ -380,11 +380,15 @@ class FlareGenerator:
             The times that the flares reach their peak in units of the total observation time.
         """
         cluster_sizes = self.rng.poisson(lam=self.cluster_size, size=n_flares)
+        cluster_sizes = cluster_sizes[cluster_sizes > 0]
         cluster_sizes = cluster_sizes[np.cumsum(cluster_sizes) < n_flares]
         n_leftover = n_flares - np.sum(cluster_sizes)
         cluster_sizes = np.append(cluster_sizes, [1]*n_leftover)
 
         n_clusters = len(cluster_sizes)
+        
+        if np.sum(cluster_sizes) != n_flares:
+            raise ValueError(f'Expected {n_flares} flares, got {np.sum(cluster_sizes)}')
 
         cluster_timescale = 1/n_clusters
 

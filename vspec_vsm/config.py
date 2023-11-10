@@ -39,3 +39,28 @@ When they are born they are given this small area.
     This should optionaly be set by the user. So that smaller
     star spot area regimes are accessible.
 """
+
+nlat = 500
+"""
+The default latitude resolution for the stellar model. This should
+be set by finding a balance between noticing small changes in spots/faculae
+and computation time.
+
+:type: int
+"""
+
+nlon = 1000
+"""
+The default longitude resolution for the stellar model. This should
+be set by finding a balance between noticing small changes in spots/faculae
+and computation time.
+
+:type: int
+"""
+
+grid_teff_bounds = (2300*u.K, 3900*u.K)
+"""
+The limits on the effective temperature allowed by the grid.
+
+:type: tuple of astropy.units.Quantity
+"""

@@ -1,0 +1,15 @@
+[project]
+name = "vspec-template"
+authors = [
+    {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
+]
+description = "Template for creating new VSPEC projects."
+readme = "docs/readme.rst"
+repository = "https://github.com/VSPEC-collab/vspec-template"
+
+version = "1.0"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+dependencies = [
+
+    ]

@@ -1,0 +1,9 @@
+This template was created by Ted Johnson (UNLV)
+
+Use this file to say who did what. Who are the 
+main developers/maintainers? Who started this project?
+Is it based on some work done by someone else? Is there
+a larger team supporting the main developers day-to-day?
+
+This file gives them credit, and also can be used to quickly
+find who to go to with questions.

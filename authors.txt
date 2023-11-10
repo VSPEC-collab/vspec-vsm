@@ -1,9 +1,7 @@
-This template was created by Ted Johnson (UNLV)
+The VSPEC Variable Star Model is based on Spotty, by Tom Barclay
+and Veselin Kostov.
 
-Use this file to say who did what. Who are the 
-main developers/maintainers? Who started this project?
-Is it based on some work done by someone else? Is there
-a larger team supporting the main developers day-to-day?
+VSPEC was originally written by Cameron Kelahan and is maintained by Ted Johnson.
 
-This file gives them credit, and also can be used to quickly
-find who to go to with questions.
+This model was written by Ted Johnson and based closely on
+the work of the other authors.

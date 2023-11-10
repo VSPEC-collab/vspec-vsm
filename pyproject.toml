@@ -1,15 +1,13 @@
 [project]
-name = "vspec-template"
+name = "vspec-vsm"
 authors = [
     {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
 ]
-description = "Template for creating new VSPEC projects."
+description = "The VSPEC Variable Star Model as a standalone package."
 readme = "docs/readme.rst"
-repository = "https://github.com/VSPEC-collab/vspec-template"
+repository = "https://github.com/VSPEC-collab/vspec-vsm"
 
-version = "1.0"
+version = "0.1"
 requires-python = ">=3.8"
 license = {text = "MIT"}
-dependencies = [
 
-    ]

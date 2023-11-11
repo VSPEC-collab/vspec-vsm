@@ -1,6 +1,7 @@
 """
 Coordinate Grid class
 """
+from typing import Tuple
 
 import numpy as np
 from astropy import units as u
@@ -58,7 +59,7 @@ class CoordinateGrid:
         self.Nlat = Nlat
         self.Nlon = Nlon
 
-    def oned(self):
+    def oned(self)->Tuple[u.Quantity]:
         """
         Create one dimensional arrays of latitude and longitude points.
 
@@ -74,7 +75,7 @@ class CoordinateGrid:
         lons = np.linspace(0, 360, self.Nlon,endpoint=False)*u.deg
         return lats, lons
 
-    def grid(self):
+    def grid(self)->Tuple[u.Quantity, u.Quantity]:
         """
         Create a 2 dimensional grid of latitude and longitude points.
 

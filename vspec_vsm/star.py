@@ -32,7 +32,6 @@ from vspec_vsm.spots import SpotCollection, SpotGenerator
 from vspec_vsm.faculae import FaculaCollection, FaculaGenerator, Facula
 from vspec_vsm.flares import FlareCollection, FlareGenerator
 from vspec_vsm.granules import Granulation
-from vspec_vsm.config import MSH
 from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
 
 
@@ -135,6 +134,7 @@ class Star:
             )
         else:
             self.flare_generator = flare_generator
+        self.flares = None
 
         if spot_generator is None:
             self.spot_generator = SpotGenerator.from_params(
@@ -262,7 +262,7 @@ class Star:
         """
         self.faculae.add_faculae(facula)
 
-    def get_mu(self, lat0: u.Quantity, lon0: u.Quantity):
+    def get_mu(self, lat0: u.Quantity, lon0: u.Quantity)->np.ndarray:
         """
         Get the cosine of the angle from disk center.
 
@@ -279,20 +279,8 @@ class Star:
             An array of cos(x) where x is
             the angle from disk center.
 
-        Notes
-        -----
-        Recall
-        .. math::
-
-            \\mu = \\cos{x}
-
-        Where :math:`x` is the angle from center of the disk.
         """
-        latgrid, longrid = self.gridmaker.grid()
-        mu = (np.sin(lat0) * np.sin(latgrid)
-              + np.cos(lat0) * np.cos(latgrid)
-              * np.cos(lon0-longrid))
-        return mu
+        return self.gridmaker.cos_angle_from_disk_center(lat0, lon0)
 
     def ld_mask(self, mu) -> np.ndarray:
         """
@@ -339,9 +327,7 @@ class Star:
         jacobian : np.ndarray
             The area of each point
         """
-        latgrid, _ = self.gridmaker.grid()
-        jacobian = np.sin(latgrid + 90*u.deg)
-        return jacobian
+        return self.gridmaker.area
 
     def add_faculae_to_map(
         self,
@@ -465,8 +451,8 @@ class Star:
             return self.gridmaker.zeros().astype('bool'), planet_fraction
         else:
             llat, llon = self.gridmaker.grid()
-            dlat = 180*u.deg/(self.gridmaker.Nlat-1)
-            dlon = 360*u.deg/self.gridmaker.Nlon
+            dlat = self.gridmaker.dlat
+            dlon = self.gridmaker.dlon
             xcoord, ycoord = proj_ortho(lat0, lon0, llat, llon)
             rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2) # map of pixel centers
             pixels_to_consider = np.where(rad_map <= rad*1.3, 1, 0).astype('bool')
@@ -545,10 +531,8 @@ class Star:
             pix_has_teff = np.where(surface_map == teff, 1, 0)
             nominal_area = np.sum(pix_has_teff*ld*jacobian)
             covered_area = np.sum(pix_has_teff*ld*jacobian*(covered))
-            total_data[teff] = (
-                nominal_area/total_area).to_value(u.dimensionless_unscaled)
-            covered_data[teff] = (
-                covered_area/total_area).to_value(u.dimensionless_unscaled)
+            total_data[teff] = nominal_area/total_area
+            covered_data[teff] = covered_area/total_area
         granulation_teff = self.Teff - self.granulation.dteff
         # initialize. This way it's okay if there's something else with that Teff too.
         if granulation_teff not in Teffs:

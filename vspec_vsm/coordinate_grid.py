@@ -130,3 +130,76 @@ class CoordinateGrid:
             raise TypeError('other must be of type CoordinateGrid')
         else:
             return (self.Nlat == other.Nlat) & (self.Nlon == other.Nlon)
+    def cos_angle_from_disk_center(
+        self,
+        lat0:u.Quantity,
+        lon0:u.Quantity
+    )->np.ndarray:
+        """
+        Get the cosine of the angle from disk center.
+
+        Parameters
+        ----------
+        lat0 : astropy.units.Quantity
+            The sub-observer latitude.
+        lon0 : astropy.units.Quantity
+            The sub-observer longitude
+
+        Returns
+        -------
+        np.ndarray
+            An array of cos(x) where x is
+            the angle from disk center.
+
+        Notes
+        -----
+        Recall
+        .. math::
+
+            \\mu = \\cos{x}
+
+        Where :math:`x` is the angle from center of the disk.
+        """
+        latgrid, longrid = self.grid()
+        mu:u.Quantity = (np.sin(lat0) * np.sin(latgrid)
+              + np.cos(lat0) * np.cos(latgrid)
+              * np.cos(lon0-longrid))
+        return mu.to_value(u.dimensionless_unscaled)
+    @property
+    def area(self)->np.ndarray:
+        """
+        Get the area of each point.
+
+        Returns
+        -------
+        np.ndarray
+            The area of each point.
+
+        """
+        latgrid, _ = self.grid()
+        jacobian:u.Quantity = np.sin(latgrid + 90*u.deg)
+        norm:u.Quantity = np.sum(jacobian)
+        return (jacobian/norm).to_value(u.dimensionless_unscaled)
+    @property
+    def dlat(self):
+        """
+        The latitude spacing.
+        
+        Returns
+        -------
+        dlat : astropy.units.Quantity
+            The latitude spacing.
+        """
+        return 180*u.deg/(self.Nlat-1)
+    @property
+    def dlon(self):
+        """
+        The longitude spacing.
+        
+        Returns
+        -------
+        dlon : astropy.units.Quantity
+            The longitude spacing.
+        """
+        return 360*u.deg/(self.Nlon)
+        

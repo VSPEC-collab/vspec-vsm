@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from vspec_vsm.faculae import Facula, FaculaCollection, FaculaGenerator
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 
 
 def init_facula(**kwargs):
@@ -181,7 +181,7 @@ def test_fac_collection_init():
     N = 4
     collec = FaculaCollection(*[init_facula(Nlat=400, Nlon=600)
                               for i in range(N)], nlat=300, nlon=600)
-    expected_grid = CoordinateGrid(300, 600)
+    expected_grid = RectangularGrid(300, 600)
     for facula in collec.faculae:
         assert isinstance(facula, Facula)
     assert collec.gridmaker == expected_grid
@@ -274,5 +274,5 @@ def test_fac_gen_init():
     assert isinstance(gen.dist_r_logsigma, float)
     assert isinstance(gen.dist_life_peak, u.Quantity)
     assert isinstance(gen.dist_life_logsigma, float)
-    assert gen.gridmaker == CoordinateGrid(300, 600)
+    assert gen.gridmaker == RectangularGrid(300, 600)
 

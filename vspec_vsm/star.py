@@ -26,7 +26,7 @@ from astropy import units as u
 from astropy.units.quantity import Quantity
 from typing import Tuple
 
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 from vspec_vsm.helpers import get_angle_between, proj_ortho, calc_circ_fraction_inside_unit_circle, clip_teff
 from vspec_vsm.spots import SpotCollection, SpotGenerator
 from vspec_vsm.faculae import FaculaCollection, FaculaGenerator, Facula
@@ -105,7 +105,7 @@ class Star:
                  faculae: FaculaCollection,
                  Nlat: int = 500,
                  Nlon: int = 1000,
-                 gridmaker: CoordinateGrid = None,
+                 gridmaker: RectangularGrid = None,
                  flare_generator: FlareGenerator = None,
                  spot_generator: SpotGenerator = None,
                  fac_generator: FaculaGenerator = None,
@@ -121,7 +121,7 @@ class Star:
         self.faculae = faculae
         self.rng = rng
         if not gridmaker:
-            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+            self.gridmaker = RectangularGrid(Nlat, Nlon)
         else:
             self.gridmaker = gridmaker
         self.faculae.gridmaker = self.gridmaker

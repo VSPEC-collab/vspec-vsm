@@ -6,7 +6,7 @@ import numpy as np
 from astropy import units as u
 
 
-class CoordinateGrid:
+class RectangularGrid:
     """
     Class to standardize the creation of latitude and longitude grids.
 
@@ -126,7 +126,7 @@ class CoordinateGrid:
             If `other` is not a CoordinateGrid object.
 
         """
-        if not isinstance(other, CoordinateGrid):
+        if not isinstance(other, RectangularGrid):
             raise TypeError('other must be of type CoordinateGrid')
         else:
             return (self.Nlat == other.Nlat) & (self.Nlon == other.Nlon)

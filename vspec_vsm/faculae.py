@@ -22,7 +22,7 @@ from astropy.units.quantity import Quantity
 
 from VSPEC.params import FaculaParameters
 
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 from vspec_vsm.helpers import round_teff
 from vspec_vsm import config
 
@@ -142,7 +142,7 @@ class Facula:
         self.is_growing = growing
 
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = RectangularGrid(nlat, nlon)
         else:
             self.gridmaker = gridmaker
 
@@ -180,7 +180,7 @@ class Facula:
         return 2 * np.arcsin(np.sqrt(np.sin(0.5*(lat0-latgrid))**2
                             + np.cos(latgrid)*np.cos(lat0)*np.sin(0.5*(lon0 - longrid))**2))
 
-    def set_gridmaker(self, gridmaker: CoordinateGrid):
+    def set_gridmaker(self, gridmaker: RectangularGrid):
         """
         .. deprecated:: 0.1
             Now that radius ``_r`` is a property is is not needed. The skeleton of this
@@ -399,11 +399,11 @@ class FaculaCollection:
     def __init__(self, *faculae: Tuple[Facula],
                  nlat: int = config.nlat,
                  nlon: int = config.nlon,
-                 gridmaker: CoordinateGrid = None):
+                 gridmaker: RectangularGrid = None):
         self.faculae: Tuple[Facula] = tuple(faculae)
 
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = RectangularGrid(nlat, nlon)
         else:
             self.gridmaker = gridmaker
         for facula in faculae:
@@ -611,7 +611,7 @@ class FaculaGenerator:
             raise ValueError(f'Unknown distribution `{dist}`.')
         self.dist = dist
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = RectangularGrid(nlat, nlon)
         else:
             self.gridmaker = gridmaker
         self.nlon = nlon
@@ -624,7 +624,7 @@ class FaculaGenerator:
         facparams: FaculaParameters,
         nlat: int = config.nlat,
         nlon: int = config.nlon,
-        gridmaker: CoordinateGrid = None,
+        gridmaker: RectangularGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
         """

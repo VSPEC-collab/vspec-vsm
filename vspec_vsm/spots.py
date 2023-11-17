@@ -16,7 +16,7 @@ from astropy.units.quantity import Quantity
 
 from VSPEC.params import SpotParameters
 
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 from vspec_vsm.config import MSH, starspot_initial_area
 from vspec_vsm import config
 
@@ -122,11 +122,11 @@ class StarSpot:
         self.growth_rate = growth_rate
 
         if gridmaker is None:
-            self.set_gridmaker(CoordinateGrid(Nlat, Nlon))
+            self.set_gridmaker(RectangularGrid(Nlat, Nlon))
         else:
             self.set_gridmaker(gridmaker)
 
-    def set_gridmaker(self, gridmaker: CoordinateGrid):
+    def set_gridmaker(self, gridmaker: RectangularGrid):
         """
         Set the `gridmaker` attribute safely.
 
@@ -343,7 +343,7 @@ class SpotCollection:
     def __init__(self, *spots: StarSpot, Nlat: int = 500, Nlon: int = 1000, gridmaker=None):
         self.spots = spots
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+            self.gridmaker = RectangularGrid(Nlat, Nlon)
         else:
             self.gridmaker = gridmaker
         for spot in self.spots:
@@ -572,7 +572,7 @@ class SpotGenerator:
         self.distribution = distribution
         self.coverage = coverage
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+            self.gridmaker = RectangularGrid(Nlat, Nlon)
         else:
             self.gridmaker = gridmaker
         self.rng = rng
@@ -583,7 +583,7 @@ class SpotGenerator:
         spotparams: SpotParameters,
         nlat: int = config.nlat,
         nlon: int = config.nlon,
-        gridmaker: CoordinateGrid = None,
+        gridmaker: RectangularGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
         """

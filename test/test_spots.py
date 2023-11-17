@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from vspec_vsm.spots import StarSpot, SpotCollection, SpotGenerator
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 from vspec_vsm.config import MSH
 
 rng = np.random.default_rng(20)
@@ -58,7 +58,7 @@ def test_spot_init():
     assert np.max(spot.r.to_value(u.deg)) == pytest.approx(180, abs=1)
 
     other = init_test_spot(
-        gridmaker=CoordinateGrid(500+1, 1000),
+        gridmaker=RectangularGrid(500+1, 1000),
         Nlat=None,
         Nlon=None
     )
@@ -205,7 +205,7 @@ def test_init_spot_collection():
     N = 4
     collec = SpotCollection(*[init_test_spot()
                             for i in range(N)], Nlat=300, Nlon=600)
-    expected_grid = CoordinateGrid(300, 600)
+    expected_grid = RectangularGrid(300, 600)
     for spot in collec.spots:
         assert isinstance(spot, StarSpot)
     assert collec.gridmaker == expected_grid
@@ -312,7 +312,7 @@ def test_spot_generator_init():
     """
     Nlat, Nlon = 300, 600
     gen = init_spot_generator(Nlat=Nlat, Nlon=Nlon)
-    grid = CoordinateGrid(Nlat, Nlon)
+    grid = RectangularGrid(Nlat, Nlon)
     assert gen.gridmaker == grid
 
 

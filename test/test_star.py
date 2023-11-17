@@ -8,7 +8,7 @@ from vspec_vsm.faculae import FaculaCollection, FaculaGenerator
 from vspec_vsm.flares import FlareGenerator
 
 from vspec_vsm.granules import Granulation
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 from vspec_vsm.config import MSH
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def star_with_spots_and_fac():
             coverage=0.01,
             nlon=600,
             nlat=300,
-            gridmaker=CoordinateGrid(300, 600),
+            gridmaker=RectangularGrid(300, 600),
             rng=np.random.default_rng()
         )
     faculae = FaculaCollection(*fgen.birth_faculae(10*u.hr,radius))
@@ -71,7 +71,7 @@ def test_star_initialization(star:Star):
     assert star.period == 10 * u.day
     assert isinstance(star.spots, SpotCollection)
     assert isinstance(star.faculae, FaculaCollection)
-    assert isinstance(star.gridmaker, CoordinateGrid)
+    assert isinstance(star.gridmaker, RectangularGrid)
     assert isinstance(star.map, u.Quantity)
     assert isinstance(star.flare_generator, FlareGenerator)
     assert isinstance(star.spot_generator, SpotGenerator)
@@ -106,10 +106,10 @@ def test_star_with_custom_gridmaker():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    gridmaker = CoordinateGrid(Nlat=200, Nlon=500)
+    gridmaker = RectangularGrid(Nlat=200, Nlon=500)
     star = Star(Teff, radius, period, spots, faculae, gridmaker=gridmaker)
 
-    assert isinstance(star.gridmaker, CoordinateGrid)
+    assert isinstance(star.gridmaker, RectangularGrid)
 
 
 def test_age_method_updates_pixelmap(star_with_spots:Star):

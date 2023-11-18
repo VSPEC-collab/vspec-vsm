@@ -1,10 +1,9 @@
-"""VSPEC Spots module
+"""
+Spots
+-----
 
 This contains all the code governing
 the behavior of spots.
-
-
-
 
 """
 from typing import List, Union, Tuple

@@ -32,7 +32,7 @@ mstar_gen = SpotGenerator(
     init_area=10*MSH,
     distribution='iso',
     coverage=0.2,
-    nlat=500, nlon=1000, rng=rng
+    grid_params=(500, 1000), rng=rng
 )
 
 # %%
@@ -108,7 +108,7 @@ solar_gen = SpotGenerator(
     init_area=10*MSH,
     distribution='solar',
     coverage=target_coverage,
-    nlat=500, nlon=1000, rng=rng
+    grid_params=(500, 1000), rng=rng
 )
 r_star = 0.15*u.R_sun
 teff_star = 3000*u.K

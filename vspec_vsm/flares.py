@@ -1,4 +1,6 @@
-"""VSPEC Flares module
+"""
+Flares
+------
 
 This code governs the behavior of flares.
 """

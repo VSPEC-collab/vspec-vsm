@@ -52,8 +52,8 @@ def make_fac(_depth_over_rad: float) -> Facula:
 
 
 rad_star = 0.15*u.R_sun
-wall_brightness = 1.1
-floor_brightness = 0.9
+WALL_BRIGHTNESS = 1.1
+FLOOR_BRIGNTNESS = 0.9
 
 
 def relative_flux(_facula: Facula, angle: u.Quantity) -> float:
@@ -65,7 +65,7 @@ def relative_flux(_facula: Facula, angle: u.Quantity) -> float:
     floor_fraction = (
         area_floor/area_of_disk).to_value(u.dimensionless_unscaled)
     wall_fraction = (area_wall/area_of_disk).to_value(u.dimensionless_unscaled)
-    return 1 + floor_fraction*(floor_brightness - 1) + wall_fraction*(wall_brightness-1)
+    return 1 + floor_fraction*(FLOOR_BRIGNTNESS - 1) + wall_fraction*(WALL_BRIGHTNESS-1)
 
 # %%
 # Plot the brightness as a function of angle

@@ -422,7 +422,7 @@ class SpiralGrid(CoordinateGrid):
         """
         The area as a fraction of the unit sphere.
         """
-        return self.zeros + 1/self.n_points
+        return self.zeros() + 1/self.n_points
 
     def __eq__(self, other) -> bool:
         if isinstance(other, CoordinateGrid):

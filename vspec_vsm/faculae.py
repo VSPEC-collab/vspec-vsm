@@ -1,4 +1,7 @@
 """
+Faculae
+-------
+
 Faculae are magnetically-generated regions of the solar
 surface that usually appear as bright points near the limb;
 we employ the ``hot wall'' model :cite:p:`1976SoPh...50..269S` where
@@ -13,7 +16,7 @@ in the faculae lightcurve, we compute the fraction of the facula's normalized
 area -- the area on the disk it would occupy as a flat spot -- that is occupied by
 each the hot wall and cool floor. This is done via numerical integral along the radius of the spot.
 """
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 import warnings
 
 import numpy as np
@@ -124,9 +127,8 @@ class Facula:
         wall_teff_slope: Quantity,
         wall_teff_intercept: Quantity,
         growing: bool = True,
-        nlat: int = 500,
-        nlon: int = 1000,
-        gridmaker=None
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+        gridmaker: CoordinateGrid = None
     ):
         self.lat = lat
         self.lon = lon
@@ -142,7 +144,7 @@ class Facula:
         self.is_growing = growing
 
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
 
@@ -178,7 +180,7 @@ class Facula:
         lat0 = self.lat
         lon0 = self.lon
         return 2 * np.arcsin(np.sqrt(np.sin(0.5*(lat0-latgrid))**2
-                            + np.cos(latgrid)*np.cos(lat0)*np.sin(0.5*(lon0 - longrid))**2))
+                                    + np.cos(latgrid)*np.cos(lat0)*np.sin(0.5*(lon0 - longrid))**2))
 
     def set_gridmaker(self, gridmaker: CoordinateGrid):
         """
@@ -225,7 +227,7 @@ class Facula:
         else:
             self.radius = self.radius * np.exp(-2*time/self.lifetime)
 
-    def effective_area(self, angle, N=201):
+    def effective_area(self, angle, n_points=101):
         """
         Calculate the effective area of the floor and walls when projected on a disk.
 
@@ -233,7 +235,7 @@ class Facula:
         ----------
         angle : astropy.units.Quantity 
             Angle from disk center.
-        N : int, optional
+        n_points : int, optional
             Number of points to sample the facula with. Default is 101.
 
         Returns
@@ -293,24 +295,24 @@ class Facula:
             }
         else:
             # distance from center along azmuth of disk
-            x = np.linspace(-1, 1, N) * self.radius
+            x = np.linspace(-1, 1, n_points) * self.radius
             # effective radius of the 1D facula approximation
             h = np.sqrt(self.radius**2 - x**2)
             critical_angles = np.ones_like(
                 h.value)*90*u.deg if self.depth == 0*u.km else np.arctan(2*h/self.depth)
-            Zeffs = np.sin(angle)*np.ones(N) * self.depth
-            Reffs = np.cos(angle)*h*2 - self.depth * np.sin(angle)
+            z_effs = np.sin(angle)*np.ones(n_points) * self.depth
+            r_effs = np.cos(angle)*h*2 - self.depth * np.sin(angle)
             no_floor = critical_angles < angle
-            Zeffs[no_floor] = 2*h[no_floor]*np.cos(angle)
-            Reffs[no_floor] = 0
+            z_effs[no_floor] = 2*h[no_floor]*np.cos(angle)
+            r_effs[no_floor] = 0
 
             return {
-                round_teff(self.wall_dteff): np.trapz(Zeffs, x),
-                round_teff(self.floor_dteff): np.trapz(Reffs, x)
+                round_teff(self.wall_dteff): np.trapz(z_effs, x),
+                round_teff(self.floor_dteff): np.trapz(r_effs, x)
             }
 
     def fractional_effective_area(self, angle: Quantity,
-                                  N: int = 101) -> Dict[Quantity, Quantity]:
+                                  n_points: int = 101) -> Dict[Quantity, Quantity]:
         """
         Calculate the fractional effective area as a fraction of the
         projected area of a region of quiet photosphere with
@@ -329,12 +331,12 @@ class Facula:
             Fractional effective area of the wall and floor. Keys are Teff.
 
         """
-        effective_area = self.effective_area(angle, N=N)
+        effective_area = self.effective_area(angle, n_points=n_points)
         frac_eff_area = {}
         total = 0
         for _, area in effective_area.items():
             total = total + area
-        for teff,area in effective_area.items():
+        for teff, area in effective_area.items():
             frac_eff_area[teff] = (area/total).to(u.dimensionless_unscaled)
         return frac_eff_area
 
@@ -397,13 +399,12 @@ class FaculaCollection:
     """
 
     def __init__(self, *faculae: Tuple[Facula],
-                 nlat: int = config.nlat,
-                 nlon: int = config.nlon,
+                 grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
                  gridmaker: CoordinateGrid = None):
         self.faculae: Tuple[Facula] = tuple(faculae)
 
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         for facula in faculae:
@@ -585,9 +586,8 @@ class FaculaGenerator:
         wall_teff_intercept: Quantity,
         coverage: float,
         dist: str = 'iso',
-        nlon: int = config.nlon,
-        nlat: int = config.nlat,
-        gridmaker=None,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
+        gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
         self.dist_r_peak = dist_r_peak
@@ -611,19 +611,17 @@ class FaculaGenerator:
             raise ValueError(f'Unknown distribution `{dist}`.')
         self.dist = dist
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
-        self.nlon = nlon
-        self.nlat = nlat
+        self.grid_params = grid_params
         self.rng = rng
 
     @classmethod
     def from_params(
         cls,
         facparams: FaculaParameters,
-        nlat: int = config.nlat,
-        nlon: int = config.nlon,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
@@ -656,8 +654,7 @@ class FaculaGenerator:
             wall_teff_intercept=facparams.wall_teff_intercept,
             coverage=facparams.equillibrium_coverage,
             dist=facparams.distribution,
-            nlat=nlat,
-            nlon=nlon,
+            grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
@@ -702,13 +699,13 @@ class FaculaGenerator:
             self.mean_area * time / (2*self.dist_life_peak)
         return n_exp.to_value(u.dimensionless_unscaled)
 
-    def get_coords(self, N: int):
+    def get_coords(self, n_to_generate: int):
         """
         Generate random coordinates for new Faculae to be centered at.
 
         Parameters
         ----------
-        N : int
+        n_to_generate : int
             The number of lat/lon pairs to create.
 
         Returns
@@ -726,9 +723,9 @@ class FaculaGenerator:
             If `dist` is not recognized.
         """
         if self.dist == 'iso':
-            x = self.rng.random(size=N)
+            x = self.rng.random(size=n_to_generate)
             lats = np.arcsin(2*x - 1)/np.pi * 180*u.deg
-            lons = self.rng.random(size=N) * 360 * u.deg
+            lons = self.rng.random(size=n_to_generate) * 360 * u.deg
             return lats, lons
         elif self.dist == 'solar':
             raise NotImplementedError(
@@ -737,29 +734,27 @@ class FaculaGenerator:
             raise ValueError(
                 f'{self.dist} is not recognized as a distribution')
 
-    def generate_faculae(self, N: int):
+    def generate_faculae(self, n_to_generate: int):
         """
         Generate a given number of new Faculae
 
         Parameters
         ----------
-        N : int
+        n_to_generate : int
             The number of faculae to generate.
-        Teff_star : astropy.units.Quantity
-            Temperature of the star.
 
         Returns
         -------
         tuple of Facula
             Tuple of new faculae.
         """
-        mu = self.rng.normal(loc=0, scale=1, size=N)
+        mu = self.rng.normal(loc=0, scale=1, size=n_to_generate)
         max_radii = self.dist_r_peak * 10**(mu*self.dist_r_logsigma)
         lifetimes = self.dist_life_peak * 10**(mu*self.dist_life_logsigma)
         starting_radii = max_radii / np.e**2
-        lats, lons = self.get_coords(N)
+        lats, lons = self.get_coords(n_to_generate)
         new_faculae = []
-        for i in range(N):
+        for i in range(n_to_generate):
             new_faculae.append(
                 Facula(
                     lat=lats[i],
@@ -774,9 +769,8 @@ class FaculaGenerator:
                     wall_teff_slope=self.wall_teff_slope,
                     wall_teff_intercept=self.wall_teff_intercept,
                     growing=True,
-                    nlat=self.nlat,
-                    nlon=self.nlon,
-                    gridmaker=None
+                    grid_params=self.grid_params,
+                    gridmaker=self.gridmaker
                 )
             )
         return tuple(new_faculae)
@@ -800,6 +794,6 @@ class FaculaGenerator:
         tuple of Facula
             Tuple of new faculae.
         """
-        N_exp = self.get_n_faculae_expected(time, rad_star)
-        n_actual = self.rng.poisson(lam=N_exp)
+        n_exp = self.get_n_faculae_expected(time, rad_star)
+        n_actual = self.rng.poisson(lam=n_exp)
         return self.generate_faculae(n_actual)

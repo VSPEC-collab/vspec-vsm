@@ -462,24 +462,27 @@ class Star:
             case1 = (rad_map > rad + 2*proj_radii) | np.isnan(rad_map)
             
             covered_value = np.where(~case1, 1, 0).astype('float')
+            if np.any(np.isnan(covered_value)):
+                raise ValueError('NaN in covered_value')
             indicies = np.argwhere(~case1)
             for index in indicies:
                 s = index if index is int else tuple(index)
                 dist_from_transit_center:float = rad_map[s]
                 gauss_sigma = proj_radii[s]
-                def fun(r,theta):
-                    """
-                    Function from: https://math.stackexchange.com/questions/2358965/integral-of-multivariable-gaussian-across-a-circular-domain
-                    """
-                    # r*e**a*e**b
-                    a = -r**2/(2*gauss_sigma**2)
-                    b = (2*r*dist_from_transit_center*np.cos(theta))/(2*gauss_sigma**2)
-                    return r * np.exp(a) * np.exp(b)
-                overlap, _ = dblquad(fun,0,2*np.pi,0,rad, epsabs=1e-3, epsrel=1e-3)
-                del fun # this function is defined in a loop, so
-                        # we should make sure it is not called elsewhere
-                normalized_overlap = overlap/(2*np.pi*rad**2)
-                covered_value[s] = normalized_overlap
+                if rad > dist_from_transit_center+2*gauss_sigma:
+                    covered_value[s] = 1.
+                else:
+                    x = np.linspace(-3*gauss_sigma,3*gauss_sigma,100)
+                    xx, yy = np.meshgrid(x,x)
+                    zz = 1/(2*np.pi*gauss_sigma**2)*np.exp(-(xx**2 + yy**2) 
+                                                           / (2*gauss_sigma**2))
+                    dist = np.sqrt((xx-rad)**2 + (yy)**2)
+                    overlap = np.where(dist < rad, zz, 0)
+                    overlap = np.trapz(overlap, x, axis=1)
+                    overlap = np.trapz(overlap, x, axis=0)
+                    covered_value[s] = overlap
+            if np.any(np.isnan(covered_value)):
+                raise ValueError('NaN in covered_value')
             return covered_value, 1.0
 
     def calc_coverage(

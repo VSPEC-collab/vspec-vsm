@@ -158,7 +158,7 @@ def test_transit_mask():
     )
     assert val == 1
     assert np.any(mask == 0)
-    assert np.any(mask == 1)
+    assert np.max(mask) == pytest.approx(1,abs=1e-2)
     assert np.any((mask<1) & (mask>0))
     
     

@@ -34,12 +34,12 @@ spots = SpotCollection(
         StarSpot(
             lat=(rng.random() - 0.5)*120*u.deg,
             lon=rng.random()*360*u.deg,
-            Amax=spot_area,
-            A0=spot_area,
-            Teff_umbra=2700*u.K,
-            Teff_penumbra=2900*u.K,
-            r_A=5.,
-            growing=False,
+            area_max=spot_area,
+            area_current=spot_area,
+            teff_umbra=2700*u.K,
+            teff_penumbra=2900*u.K,
+            area_over_umbra_area=5.,
+            is_growing=False,
             growth_rate=0./u.day,
             decay_rate=0*MSH/u.day
         ) for _ in range(n_spots)
@@ -73,13 +73,13 @@ Nlon = 1000
 ld_params = dict(u1=0.3, u2=0.1)
 
 star = Star(
-    Teff=star_teff,
+    teff=star_teff,
     radius=star_radius,
     period=star_period,
     spots=spots,
     faculae=faculae,
-    Nlat=Nlat,
-    Nlon=Nlon,
+    nlat=Nlat,
+    nlat=Nlon,
     **ld_params
 )
 # %%

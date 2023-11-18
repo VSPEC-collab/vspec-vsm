@@ -32,16 +32,16 @@ rng = np.random.default_rng(SEED)
 spot = StarSpot(
     lat=0*u.deg,
     lon=0*u.deg,
-    Amax=200*MSH,
-    A0=10*MSH,
-    Teff_umbra=2700*u.K,
-    Teff_penumbra=2900*u.K,
-    r_A=5.,
-    growing=True,
+    area_max=200*MSH,
+    area_current=10*MSH,
+    teff_umbra=2700*u.K,
+    teff_penumbra=2900*u.K,
+    area_over_umbra_area=5.,
+    is_growing=True,
     growth_rate=0.5/u.day,
     decay_rate=20*MSH/u.day,
-    Nlat=500,
-    Nlon=100
+    nlat=500,
+    nlon=100
 )
 spotlist = SpotCollection(spot)
 

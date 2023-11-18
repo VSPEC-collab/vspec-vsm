@@ -612,8 +612,12 @@ class FlareCollection:
         # essentially the same as self.flares[mask], but without casting to ndarray
         return masked_flares
 
-    def get_visible_flares_in_timeperiod(self, tstart: Quantity, tfinish: Quantity,
-                                         sub_obs_coords={'lat': 0*u.deg, 'lon': 0*u.deg}) -> List[StellarFlare]:
+    def get_visible_flares_in_timeperiod(
+            self,
+            tstart: Quantity,
+            tfinish: Quantity,
+            sub_obs_coords:dict=None
+        ) -> List[StellarFlare]:
         """
         Get visible flares in a given time period on a given hemisphere.
 
@@ -623,8 +627,8 @@ class FlareCollection:
             Starting time.
         tfinish : astropy.units.Quantity 
             Ending time.
-        sub_obs_coords : dict
-            Coordinates defining the hemisphere.
+        sub_obs_coords : dict, Optional
+            Coordinates defining the hemisphere. Default is None.
 
         Returns
         -------
@@ -632,6 +636,8 @@ class FlareCollection:
             A list of flares that occur and are visible to the observer.
 
         """
+        if sub_obs_coords is None:
+            sub_obs_coords={'lat': 0*u.deg, 'lon': 0*u.deg}
         masked_flares = self.get_flares_in_timeperiod(tstart, tfinish)
         visible_flares = []
         for flare in masked_flares:
@@ -642,8 +648,12 @@ class FlareCollection:
                 visible_flares.append(flare)
         return visible_flares
 
-    def get_flare_integral_in_timeperiod(self, tstart: Quantity, tfinish: Quantity,
-                                         sub_obs_coords={'lat': 0*u.deg, 'lon': 0*u.deg}):
+    def get_flare_integral_in_timeperiod(
+        self,
+        tstart: Quantity,
+        tfinish: Quantity,
+        sub_obs_coords:dict=None
+    ):
         """
         Calculate the integrated time-area for each visible
         flare in a timeperiod.
@@ -654,8 +664,8 @@ class FlareCollection:
             Starting time.
         tfinish : astropy.units.Quantity 
             Ending time.
-        sub_obs_coords : dict
-            Coordinates defining the hemisphere.
+        sub_obs_coords : dict, optional
+            Coordinates defining the hemisphere. Defaults to None.
 
         Returns
         -------
@@ -663,6 +673,8 @@ class FlareCollection:
             List of dictionaries containing flare temperatures and integrated
             time-areas. In the format [{'Teff':9000*u.K,'timearea'=3000*u.Unit('km2 hr)},...]
         """
+        if sub_obs_coords is None:
+            sub_obs_coords={'lat': 0*u.deg, 'lon': 0*u.deg}
         visible_flares = self.get_visible_flares_in_timeperiod(
             tstart, tfinish, sub_obs_coords)
         flare_timeareas = []

@@ -40,7 +40,7 @@ When they are born they are given this small area.
     star spot area regimes are accessible.
 """
 
-nlat = 500
+NLAT = 500
 """
 The default latitude resolution for the stellar model. This should
 be set by finding a balance between noticing small changes in spots/faculae
@@ -49,7 +49,7 @@ and computation time.
 :type: int
 """
 
-nlon = 1000
+NLON = 1000
 """
 The default longitude resolution for the stellar model. This should
 be set by finding a balance between noticing small changes in spots/faculae

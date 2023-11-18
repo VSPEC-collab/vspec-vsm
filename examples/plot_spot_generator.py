@@ -32,7 +32,7 @@ mstar_gen = SpotGenerator(
     init_area=10*MSH,
     distribution='iso',
     coverage=0.2,
-    Nlat=500, Nlon=1000, rng=rng
+    nlat=500, nlon=1000, rng=rng
 )
 
 # %%
@@ -46,7 +46,7 @@ teff_star = 3000*u.K
 target_coverage = 0.2
 spots = mstar_gen.generate_mature_spots(
     coverage=target_coverage,
-    R_star=r_star
+    r_star=r_star
 )
 spots = SpotCollection(*spots, gridmaker=mstar_gen.gridmaker)
 star_surface_area = 4*np.pi*r_star**2
@@ -108,7 +108,7 @@ solar_gen = SpotGenerator(
     init_area=10*MSH,
     distribution='solar',
     coverage=target_coverage,
-    Nlat=500, Nlon=1000, rng=rng
+    nlat=500, nlon=1000, rng=rng
 )
 r_star = 0.15*u.R_sun
 teff_star = 3000*u.K
@@ -125,7 +125,7 @@ spots = SpotCollection(gridmaker=solar_gen.gridmaker)
 # A Poisson draw is then used to pick a number based on the expectation value.
 
 dtime = 1*u.day
-print(f'In {dtime:.1f} we expect {solar_gen.get_N_spots_to_birth(dtime,r_star):.1f} new spots.')
+print(f'In {dtime:.1f} we expect {solar_gen.get_n_spots_to_birth(dtime,r_star):.1f} new spots.')
 new_spots = solar_gen.birth_spots(dtime, r_star)
 spots.add_spot(new_spots)
 

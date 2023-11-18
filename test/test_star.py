@@ -19,7 +19,7 @@ def star():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    return Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000)
+    return Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000)
 
 @pytest.fixture
 def star_with_spots():
@@ -66,7 +66,7 @@ def star_with_spots_and_fac():
 
 
 def test_star_initialization(star:Star):
-    assert star.Teff == 3000 * u.K
+    assert star.teff == 3000 * u.K
     assert star.radius == 0.15 * u.Rsun
     assert star.period == 10 * u.day
     assert isinstance(star.spots, SpotCollection)
@@ -146,7 +146,7 @@ def test_transit_mask():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000)
+    star = Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000)
     
     mask, val = star.get_transit_mask(
         lat0=0*u.deg,
@@ -231,7 +231,7 @@ def test_calc_coverage():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000,
+    star = Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000,
                 u1=0.1)
     
     rs_rp = 10
@@ -247,8 +247,8 @@ def test_calc_coverage():
         sub_obs_coords=sub_obs,
         granulation_fraction=0.0
     )
-    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
-    assert dat_cov[star.Teff] == 0.0, 'Occulted coverage must be 0.0'
+    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_cov[star.teff] == 0.0, 'Occulted coverage must be 0.0'
     assert pl_frac == 1
     
     dat_tot, dat_cov, pl_frac = star.calc_coverage(
@@ -259,7 +259,7 @@ def test_calc_coverage():
         phase=phase,
         inclination=i
     )
-    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
     # assert dat_cov[star.Teff] == pytest.approx(1/rs_rp**2,rel=1e-3), 'Planet occultation incorrect for phase=90deg'
     assert pl_frac == 1, 'All of planet must be visible.'
     
@@ -271,7 +271,7 @@ def test_calc_coverage():
         phase=phase+0.3*u.deg,
         inclination=i
     )
-    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
     # assert dat_cov[star.Teff] == pytest.approx(1/rs_rp**2,rel=1e-3), 'Planet occultation incorrect for phase=90.3deg'
     assert pl_frac == 1, 'All of planet must be visible.'
     

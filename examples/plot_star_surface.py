@@ -73,13 +73,13 @@ Nlon = 1000
 ld_params = dict(u1=0.3, u2=0.1)
 
 star = Star(
-    Teff=star_teff,
+    teff=star_teff,
     radius=star_radius,
     period=star_period,
     spots=spots,
     faculae=faculae,
-    Nlat=Nlat,
-    Nlon=Nlon,
+    nlat=Nlat,
+    nlat=Nlon,
     **ld_params
 )
 # %%

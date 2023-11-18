@@ -19,7 +19,7 @@ def star():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    return Star(Teff, radius, period, spots, faculae,grid_params=(500,1000))
+    return Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000)
 
 @pytest.fixture
 def star_with_spots():
@@ -55,8 +55,9 @@ def star_with_spots_and_fac():
             wall_teff_slope=0*u.K/u.km,
             wall_teff_intercept=100*u.K,
             coverage=0.01,
-            grid_params=(300, 600),
-            gridmaker=CoordinateGrid.new((300, 600)),
+            nlon=600,
+            nlat=300,
+            gridmaker=CoordinateGrid(300, 600),
             rng=np.random.default_rng()
         )
     faculae = FaculaCollection(*fgen.birth_faculae(10*u.hr,radius))
@@ -65,7 +66,7 @@ def star_with_spots_and_fac():
 
 
 def test_star_initialization(star:Star):
-    assert star.teff == 3000 * u.K
+    assert star.Teff == 3000 * u.K
     assert star.radius == 0.15 * u.Rsun
     assert star.period == 10 * u.day
     assert isinstance(star.spots, SpotCollection)
@@ -84,7 +85,7 @@ def test_get_pixelmap(star:Star):
     pixelmap = star.map
 
     assert isinstance(pixelmap, u.Quantity)
-    assert pixelmap.shape == (star.gridmaker.nlon, star.gridmaker.nlat)
+    assert pixelmap.shape == (star.gridmaker.Nlon, star.gridmaker.Nlat)
     assert pixelmap.unit == u.K
 
 def test_star_with_granulation():
@@ -105,7 +106,8 @@ def test_star_with_custom_gridmaker():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,grid_params=1000)
+    gridmaker = CoordinateGrid(Nlat=200, Nlon=500)
+    star = Star(Teff, radius, period, spots, faculae, gridmaker=gridmaker)
 
     assert isinstance(star.gridmaker, CoordinateGrid)
 
@@ -144,7 +146,7 @@ def test_transit_mask():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,grid_params=(500,1000))
+    star = Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000)
     
     mask, val = star.get_transit_mask(
         lat0=0*u.deg,
@@ -156,7 +158,7 @@ def test_transit_mask():
     )
     assert val == 1
     assert np.any(mask == 0)
-    assert np.max(mask) == pytest.approx(1,abs=1e-2)
+    assert np.any(mask == 1)
     assert np.any((mask<1) & (mask>0))
     
     
@@ -229,7 +231,7 @@ def test_calc_coverage():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,grid_params=(500,1000),
+    star = Star(Teff, radius, period, spots, faculae,Nlat=500,Nlon=1000,
                 u1=0.1)
     
     rs_rp = 10
@@ -245,8 +247,8 @@ def test_calc_coverage():
         sub_obs_coords=sub_obs,
         granulation_fraction=0.0
     )
-    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
-    assert dat_cov[star.teff] == 0.0, 'Occulted coverage must be 0.0'
+    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_cov[star.Teff] == 0.0, 'Occulted coverage must be 0.0'
     assert pl_frac == 1
     
     dat_tot, dat_cov, pl_frac = star.calc_coverage(
@@ -257,7 +259,7 @@ def test_calc_coverage():
         phase=phase,
         inclination=i
     )
-    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
     # assert dat_cov[star.Teff] == pytest.approx(1/rs_rp**2,rel=1e-3), 'Planet occultation incorrect for phase=90deg'
     assert pl_frac == 1, 'All of planet must be visible.'
     
@@ -269,7 +271,7 @@ def test_calc_coverage():
         phase=phase+0.3*u.deg,
         inclination=i
     )
-    assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
+    assert dat_tot[star.Teff] == 1.0, 'Total coverage must be 1.0'
     # assert dat_cov[star.Teff] == pytest.approx(1/rs_rp**2,rel=1e-3), 'Planet occultation incorrect for phase=90.3deg'
     assert pl_frac == 1, 'All of planet must be visible.'
     
@@ -427,4 +429,4 @@ def test_calc_coverage():
 
 
 if __name__ in '__main__':
-    pytest.main(args=[__file__])
+    test_transit_mask()

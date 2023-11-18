@@ -20,24 +20,20 @@ including radius, period, and the effective temperature of quiet photosphere.
 Herein we refer to this temperature as the photosphere temperature to differentiate
 it from the temperature of spots, faculae, or other sources of variability.
 """
-from typing import Tuple, Union
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.units.quantity import Quantity
-
-from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
+from typing import Tuple
 
 from vspec_vsm.coordinate_grid import CoordinateGrid
-from vspec_vsm.helpers import (
-    get_angle_between, proj_ortho,
-    calc_circ_fraction_inside_unit_circle,
-    clip_teff
-)
+from vspec_vsm.helpers import get_angle_between, proj_ortho, calc_circ_fraction_inside_unit_circle, clip_teff
 from vspec_vsm.spots import SpotCollection, SpotGenerator
 from vspec_vsm.faculae import FaculaCollection, FaculaGenerator, Facula
 from vspec_vsm.flares import FlareCollection, FlareGenerator
 from vspec_vsm.granules import Granulation
+from vspec_vsm.config import MSH
+from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
 
 
 class Star:
@@ -103,12 +99,14 @@ class Star:
         Limb-darkening parameter u2.
     """
 
-    def __init__(self, teff: u.Quantity,
+    def __init__(self, Teff: u.Quantity,
                  radius: u.Quantity,
                  period: u.Quantity,
                  spots: SpotCollection,
                  faculae: FaculaCollection,
-                 grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+                 Nlat: int = 500,
+                 Nlon: int = 1000,
+                 gridmaker: CoordinateGrid = None,
                  flare_generator: FlareGenerator = None,
                  spot_generator: SpotGenerator = None,
                  fac_generator: FaculaGenerator = None,
@@ -117,15 +115,16 @@ class Star:
                  u2: float = 0,
                  rng: np.random.Generator = np.random.default_rng()
                  ):
-        self.teff = teff
+        self.Teff = Teff
         self.radius = radius
         self.period = period
         self.spots = spots
         self.faculae = faculae
         self.rng = rng
-        self.gridmaker = CoordinateGrid.new(grid_params)
-        self.grid_params = grid_params
-        
+        if not gridmaker:
+            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+        else:
+            self.gridmaker = gridmaker
         self.faculae.gridmaker = self.gridmaker
         self.spots.gridmaker = self.gridmaker
 
@@ -136,12 +135,12 @@ class Star:
             )
         else:
             self.flare_generator = flare_generator
-        self.flares = None
 
         if spot_generator is None:
             self.spot_generator = SpotGenerator.from_params(
                 spotparams=SpotParameters.none(),
-                grid_params=grid_params,
+                nlat=Nlat,
+                nlon=Nlon,
                 gridmaker=self.gridmaker,
                 rng=self.rng
             )
@@ -151,58 +150,49 @@ class Star:
         if fac_generator is None:
             self.fac_generator = FaculaGenerator.from_params(
                 facparams=FaculaParameters.none(),
-                grid_params=grid_params,
+                nlat=Nlat,
+                nlon=Nlon,
                 gridmaker=self.gridmaker,
                 rng=self.rng
             )
         else:
             self.fac_generator = fac_generator
         if granulation is None:
-            self.granulation = Granulation(0, 0, 1*u.day, 0*u.K)
+            self.granulation = Granulation(0,0,1*u.day,0*u.K)
         else:
             self.granulation = granulation
         self.u1 = u1
         self.u2 = u2
         self.set_spot_grid()
         self.set_fac_grid()
-
+    
     @classmethod
-    def from_params(cls, starparams: StarParameters, rng: np.random.Generator, seed: int):
-        """
-        Create a star from VSPEC parameters.
-
-        Parameters
-        ----------
-        starparams : StarParameters
-            Star parameters from VSPEC.
-        rng : np.random.Generator
-            Random number generator.
-        seed : int
-            Seed for the random number generator.
-        """
+    def from_params(cls,starparams:StarParameters,rng:np.random.Generator,seed:int):
         return cls(
             radius=starparams.radius,
             period=starparams.period,
-            teff=starparams.teff,
-            spots=SpotCollection(grid_params=starparams.grid_params),
-            faculae=FaculaCollection(grid_params=starparams.grid_params),
-            grid_params=starparams.grid_params,
-            flare_generator=FlareGenerator.from_params(
-                starparams.flares, rng=rng),
+            Teff=starparams.teff,
+            spots=SpotCollection(Nlat=starparams.Nlat,Nlon=starparams.Nlon),
+            faculae=FaculaCollection(nlat=starparams.Nlat,nlon=starparams.Nlon),
+            Nlat=starparams.Nlat,
+            Nlon=starparams.Nlon,
+            gridmaker=None,
+            flare_generator=FlareGenerator.from_params(starparams.flares,rng=rng),
             spot_generator=SpotGenerator.from_params(
                 spotparams=starparams.spots,
-                grid_params=starparams.grid_params,
+                nlat=starparams.Nlat,
+                nlon=starparams.Nlon,
                 gridmaker=None,
                 rng=rng
             ),
             fac_generator=FaculaGenerator.from_params(
                 facparams=starparams.faculae,
-                grid_params=starparams.grid_params,
+                nlat=starparams.Nlat,
+                nlon=starparams.Nlon,
                 gridmaker=None,
                 rng=rng
             ),
-            granulation=Granulation.from_params(granulation_params=starparams.granulation,
-                                                seed=seed),
+            granulation=Granulation.from_params(granulation_params=starparams.granulation,seed=seed),
             u1=starparams.ld.u1,
             u2=starparams.ld.u2,
             rng=rng
@@ -232,7 +222,7 @@ class Star:
         pixelmap : astropy.units.Quantity , Shape(self.gridmaker.Nlon,self.gridmaker.Nlat)
             Map of stellar surface with effective temperature assigned to each pixel.
         """
-        return self.spots.map_pixels(self.radius, self.teff)
+        return self.spots.map_pixels(self.radius, self.Teff)
 
     def age(self, time):
         """
@@ -272,7 +262,7 @@ class Star:
         """
         self.faculae.add_faculae(facula)
 
-    def get_mu(self, lat0: u.Quantity, lon0: u.Quantity) -> np.ndarray:
+    def get_mu(self, lat0: u.Quantity, lon0: u.Quantity):
         """
         Get the cosine of the angle from disk center.
 
@@ -289,8 +279,20 @@ class Star:
             An array of cos(x) where x is
             the angle from disk center.
 
+        Notes
+        -----
+        Recall
+        .. math::
+
+            \\mu = \\cos{x}
+
+        Where :math:`x` is the angle from center of the disk.
         """
-        return self.gridmaker.cos_angle_from_disk_center(lat0, lon0)
+        latgrid, longrid = self.gridmaker.grid()
+        mu = (np.sin(lat0) * np.sin(latgrid)
+              + np.cos(lat0) * np.cos(latgrid)
+              * np.cos(lon0-longrid))
+        return mu
 
     def ld_mask(self, mu) -> np.ndarray:
         """
@@ -337,7 +339,9 @@ class Star:
         jacobian : np.ndarray
             The area of each point
         """
-        return self.gridmaker.area
+        latgrid, _ = self.gridmaker.grid()
+        jacobian = np.sin(latgrid + 90*u.deg)
+        return jacobian
 
     def add_faculae_to_map(
         self,
@@ -375,8 +379,8 @@ class Star:
                 border_mu = np.percentile(mu_of_fac_pix, 100*frac)
                 wall_pix = inside_fac & (mu <= border_mu)
                 floor_pix = inside_fac & (mu > border_mu)
-                teff_wall = clip_teff(dteff_wall + self.teff)
-                teff_floor = clip_teff(dteff_floor + self.teff)
+                teff_wall = clip_teff(dteff_wall + self.Teff)
+                teff_floor = clip_teff(dteff_floor + self.Teff)
                 map_from_spots[wall_pix] = teff_wall
                 map_from_spots[floor_pix] = teff_floor
         return map_from_spots
@@ -436,7 +440,7 @@ class Star:
             The phase of the planet. 180 degrees is mid transit.
         inclination : astropy.units.Quantity
             The inclination of the planet. 90 degrees is transiting.
-
+        
         Returns
         -------
         mask : np.ndarray
@@ -452,7 +456,7 @@ class Star:
              ).to_value(u.dimensionless_unscaled)
         y = (orbit_radius/self.radius * np.cos(angle_past_midtransit)
              * np.cos(inclination)).to_value(u.dimensionless_unscaled)
-        rad: float = (radius/self.radius).to_value(u.dimensionless_unscaled)
+        rad = (radius/self.radius).to_value(u.dimensionless_unscaled)
         if np.sqrt(x**2 + y**2) > 1 + 2*rad:  # no transit
             return self.gridmaker.zeros().astype('bool'), 1.0
         elif eclipse:
@@ -461,38 +465,26 @@ class Star:
             return self.gridmaker.zeros().astype('bool'), planet_fraction
         else:
             llat, llon = self.gridmaker.grid()
+            dlat = 180*u.deg/(self.gridmaker.Nlat-1)
+            dlon = 360*u.deg/self.gridmaker.Nlon
             xcoord, ycoord = proj_ortho(lat0, lon0, llat, llon)
-            mu = self.gridmaker.cos_angle_from_disk_center(lat0, lon0)
-            area = self.gridmaker.area  # area in units of 4pi steradians
-            point_radii = np.sqrt(area)  # radius of each pixel in radians
-            proj_radii = point_radii*mu  # radius of each pixel in projected coords
-            # distances in projected coords
-            rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2)
-            # case 1: Point is completely outside transit radius
-            case1 = (rad_map > rad + 2*proj_radii) | np.isnan(rad_map)
-
-            covered_value = np.where(~case1, 1, 0).astype('float')
-            if np.any(np.isnan(covered_value)):
-                raise ValueError('NaN in covered_value')
-            indicies = np.argwhere(~case1)
+            rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2) # map of pixel centers
+            pixels_to_consider = np.where(rad_map <= rad*1.3, 1, 0).astype('bool')
+            covered_value = np.where(rad_map <= rad*1.3, 1, 0).astype('float')
+            indicies = np.argwhere(pixels_to_consider)
+            n_subdiv = 5
             for index in indicies:
-                s = index if index is int else tuple(index)
-                dist_from_transit_center: float = rad_map[s]
-                gauss_sigma = proj_radii[s]
-                if rad > dist_from_transit_center+2*gauss_sigma:
-                    covered_value[s] = 1.
-                else:
-                    x = np.linspace(-3*gauss_sigma, 3*gauss_sigma, 100)
-                    xx, yy = np.meshgrid(x, x)
-                    zz = 1/(2*np.pi*gauss_sigma**2)*np.exp(-(xx**2 + yy**2)
-                                                           / (2*gauss_sigma**2))
-                    dist = np.sqrt((xx-rad)**2 + (yy)**2)
-                    overlap = np.where(dist < rad, zz, 0)
-                    overlap = np.trapz(overlap, x, axis=1)
-                    overlap = np.trapz(overlap, x, axis=0)
-                    covered_value[s] = overlap
-            if np.any(np.isnan(covered_value)):
-                raise ValueError('NaN in covered_value')
+                i = index[0]
+                j = index[1]
+                lon = llon[i,j]
+                lat = llat[i,j]
+                lats = np.linspace(-0.5,0.5,n_subdiv,endpoint=False)*dlat + lat
+                lons = np.linspace(-0.5,0.5,n_subdiv,endpoint=False)*dlon + lon
+                latgrid,longrid = np.meshgrid(lats,lons)
+                xs, ys = proj_ortho(lat0,lon0,latgrid,longrid)
+                radii = np.sqrt((x-xs)**2+(y-ys)**2)
+                frac_inside = np.sum(radii<rad)/np.size(radii)
+                covered_value[i,j] = frac_inside        
             return covered_value, 1.0
 
     def calc_coverage(
@@ -545,27 +537,29 @@ class Star:
             inclination=inclination
         )
 
-        teffs = np.unique(surface_map)
+        Teffs = np.unique(surface_map)
         total_data = {}
         covered_data = {}
         total_area = np.sum(ld*jacobian)
-        for teff in teffs:
+        for teff in Teffs:
             pix_has_teff = np.where(surface_map == teff, 1, 0)
             nominal_area = np.sum(pix_has_teff*ld*jacobian)
             covered_area = np.sum(pix_has_teff*ld*jacobian*(covered))
-            total_data[teff] = nominal_area/total_area
-            covered_data[teff] = covered_area/total_area
-        granulation_teff = self.teff - self.granulation.dteff
+            total_data[teff] = (
+                nominal_area/total_area).to_value(u.dimensionless_unscaled)
+            covered_data[teff] = (
+                covered_area/total_area).to_value(u.dimensionless_unscaled)
+        granulation_teff = self.Teff - self.granulation.dteff
         # initialize. This way it's okay if there's something else with that Teff too.
-        if granulation_teff not in teffs:
+        if granulation_teff not in Teffs:
             total_data[granulation_teff] = 0
             covered_data[granulation_teff] = 0
 
-        phot_frac = total_data[self.teff]
-        total_data[self.teff] = phot_frac * (1-granulation_fraction)
+        phot_frac = total_data[self.Teff]
+        total_data[self.Teff] = phot_frac * (1-granulation_fraction)
         total_data[granulation_teff] += phot_frac * granulation_fraction
-        phot_frac = covered_data[self.teff]
-        covered_data[self.teff] = phot_frac * (1-granulation_fraction)
+        phot_frac = covered_data[self.Teff]
+        covered_data[self.Teff] = phot_frac * (1-granulation_fraction)
         covered_data[granulation_teff] += phot_frac * granulation_fraction
 
         return total_data, covered_data, pl_frac
@@ -617,9 +611,9 @@ class Star:
         dat, _, _ = self.calc_coverage(sub_obs_coords)
         num = 0
         den = 0
-        for teff, value in dat.items():
-            num += teff**4 * value
-            den += value
+        for teff in dat.keys():
+            num += teff**4 * dat[teff]
+            den += dat[teff]
         return ((num/den)**(0.25)).to(u.K)
 
     def plot_surface(
@@ -630,9 +624,7 @@ class Star:
         orbit_radius: u.Quantity = 1*u.AU,
         radius: u.Quantity = 1*u.R_earth,
         phase: u.Quantity = 90*u.deg,
-        inclination: u.Quantity = 0*u.deg,
-        nlon: int = 1000,
-        nlat: int = 500
+        inclination: u.Quantity = 0*u.deg
     ):
         """
         Add the transit to the surface map and plot.
@@ -655,28 +647,21 @@ class Star:
             phase=phase,
             inclination=inclination
         )
-        map_with_faculae = self.add_faculae_to_map(lat0, lon0)
-
-        lats, lons, data = self.gridmaker.display_grid(
-            nlat, nlon, map_with_faculae)
-
-        lats = (lats*u.rad).to_value(u.deg)
-        lons = (lons*u.rad).to_value(u.deg)
-        data = data.to_value(u.K)
-        im = ax.pcolormesh(lons, lats, data.T,
+        map_with_faculae = self.add_faculae_to_map(lat0, lon0).to_value(u.K)
+        lat, lon = self.gridmaker.oned()
+        lat = lat.to_value(u.deg)
+        lon = lon.to_value(u.deg)
+        im = ax.pcolormesh(lon, lat, map_with_faculae.T,
                            transform=ccrs.PlateCarree())
         plt.colorbar(im, ax=ax, label=r'$T_{\rm eff}$ (K)')
-
-        _, _, data = self.gridmaker.display_grid(nlat, nlon, covered)
-
-        transit_mask = np.where(data > 0.5, 1, np.nan)
+        transit_mask = np.where(covered, 1, np.nan)
         zorder = 100 if pl_frac == 1. else -100
-        ax.contourf(lons, lats, transit_mask.T, colors='k', alpha=1,
+        ax.contourf(lon, lat, transit_mask.T, colors='k', alpha=1,
                     transform=ccrs.PlateCarree(), zorder=zorder)
         mu = self.get_mu(lat0, lon0)
         ld = self.ld_mask_for_plotting(mu)
         alpha = 1-ld.T/np.max(ld.T)
-        ax.imshow(np.ones_like(ld), extent=(lons.min(), lons.max(), lats.min(), lats.max()),
+        ax.imshow(np.ones_like(ld), extent=(lon.min(), lon.max(), lat.min(), lat.max()),
                   transform=ccrs.PlateCarree(), origin='lower', alpha=alpha, cmap=plt.cm.get_cmap('gray'), zorder=100)
 
     def get_flares_over_observation(self, time_duration: Quantity):

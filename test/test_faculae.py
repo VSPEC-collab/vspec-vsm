@@ -24,8 +24,7 @@ def init_facula(**kwargs):
         lifetime=kwargs.get('lifetime', 10*u.hr),
         growing=kwargs.get('growing', True),
         depth=kwargs.get('Zw', 100*u.km),
-        nlat=kwargs.get('Nlat', 300),
-        nlon=kwargs.get('Nlon', 600),
+        grid_params=kwargs.get('grid_params', (300, 600)),
         gridmaker=kwargs.get('gridmaker', None),
         floor_teff_base_dteff=kwargs.get('floor_teff_base_dteff',100*u.K),
         wall_teff_intercept=kwargs.get('wall_teff_intercept',0*u.K),
@@ -179,8 +178,8 @@ def test_fac_collection_init():
     Test `FaculaCollection.__init__()`
     """
     N = 4
-    collec = FaculaCollection(*[init_facula(Nlat=400, Nlon=600)
-                              for i in range(N)], nlat=300, nlon=600)
+    collec = FaculaCollection(*[init_facula(grid_params=(400, 600))
+                              for _ in range(N)], grid_params=(300, 600))
     expected_grid = RectangularGrid(300, 600)
     for facula in collec.faculae:
         assert isinstance(facula, Facula)
@@ -194,8 +193,8 @@ def test_fac_collection_add_facula():
     Test `FaculaCollection.add_facula()`
     """
     N = 4
-    collec = FaculaCollection(*[init_facula(Nlat=400, Nlon=600)
-                              for i in range(N)], nlat=300, nlon=600)
+    collec = FaculaCollection(*[init_facula(grid_params=(400, 600))
+                              for _ in range(N)], grid_params=(300, 600))
     assert len(collec.faculae) == N
     collec.add_faculae(init_facula(Nlat=400, Nlon=600))
     assert len(collec.faculae) == N+1
@@ -268,7 +267,7 @@ def test_fac_gen_init():
         wall_teff_slope=0*u.K/u.km,
         wall_teff_intercept=100*u.K,
         coverage=0.01,
-        nlon=600,nlat=300
+        grid_params=(300,600)
     )
     assert isinstance(gen.dist_r_peak, u.Quantity)
     assert isinstance(gen.dist_r_logsigma, float)

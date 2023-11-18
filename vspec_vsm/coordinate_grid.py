@@ -52,7 +52,15 @@ class CoordinateGrid:
     def _grid(self) -> Tuple[u.Quantity, u.Quantity]:
         raise NotImplementedError(
             'Attempted to call abstract method _grid() from base class')
-
+    @staticmethod
+    def new(grid_params: Union[int,Tuple[int, int]]):
+        if isinstance(grid_params, int):
+            return SpiralGrid(grid_params)
+        elif isinstance(grid_params, tuple):
+            return RectangularGrid(*grid_params)
+        else:
+            raise TypeError('grid_params must be of type int or tuple')
+    
     def grid(self) -> Tuple[u.Quantity, u.Quantity]:
         """
         Get a grid of latitudes and longitudes.

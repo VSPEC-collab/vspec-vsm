@@ -8,7 +8,7 @@ from vspec_vsm.faculae import FaculaCollection, FaculaGenerator
 from vspec_vsm.flares import FlareGenerator
 
 from vspec_vsm.granules import Granulation
-from vspec_vsm.coordinate_grid import RectangularGrid
+from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.config import MSH
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def star():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    return Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000)
+    return Star(Teff, radius, period, spots, faculae,grid_params=(500,1000))
 
 @pytest.fixture
 def star_with_spots():
@@ -55,9 +55,8 @@ def star_with_spots_and_fac():
             wall_teff_slope=0*u.K/u.km,
             wall_teff_intercept=100*u.K,
             coverage=0.01,
-            nlon=600,
-            nlat=300,
-            gridmaker=RectangularGrid(300, 600),
+            grid_params=(300, 600),
+            gridmaker=CoordinateGrid.new((300, 600)),
             rng=np.random.default_rng()
         )
     faculae = FaculaCollection(*fgen.birth_faculae(10*u.hr,radius))
@@ -71,7 +70,7 @@ def test_star_initialization(star:Star):
     assert star.period == 10 * u.day
     assert isinstance(star.spots, SpotCollection)
     assert isinstance(star.faculae, FaculaCollection)
-    assert isinstance(star.gridmaker, RectangularGrid)
+    assert isinstance(star.gridmaker, CoordinateGrid)
     assert isinstance(star.map, u.Quantity)
     assert isinstance(star.flare_generator, FlareGenerator)
     assert isinstance(star.spot_generator, SpotGenerator)
@@ -106,10 +105,9 @@ def test_star_with_custom_gridmaker():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    gridmaker = RectangularGrid(nlat=200, nlon=500)
-    star = Star(Teff, radius, period, spots, faculae, gridmaker=gridmaker)
+    star = Star(Teff, radius, period, spots, faculae,grid_params=1000)
 
-    assert isinstance(star.gridmaker, RectangularGrid)
+    assert isinstance(star.gridmaker, CoordinateGrid)
 
 
 def test_age_method_updates_pixelmap(star_with_spots:Star):
@@ -146,7 +144,7 @@ def test_transit_mask():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000)
+    star = Star(Teff, radius, period, spots, faculae,grid_params=(500,1000))
     
     mask, val = star.get_transit_mask(
         lat0=0*u.deg,
@@ -231,7 +229,7 @@ def test_calc_coverage():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    star = Star(Teff, radius, period, spots, faculae,nlat=500,nlat=1000,
+    star = Star(Teff, radius, period, spots, faculae,grid_params=(500,1000),
                 u1=0.1)
     
     rs_rp = 10

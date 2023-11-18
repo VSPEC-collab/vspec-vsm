@@ -20,7 +20,7 @@ including radius, period, and the effective temperature of quiet photosphere.
 Herein we refer to this temperature as the photosphere temperature to differentiate
 it from the temperature of spots, faculae, or other sources of variability.
 """
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
@@ -28,7 +28,7 @@ from astropy.units.quantity import Quantity
 
 from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
 
-from vspec_vsm.coordinate_grid import RectangularGrid, CoordinateGrid
+from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.helpers import (
     get_angle_between, proj_ortho,
     calc_circ_fraction_inside_unit_circle,
@@ -108,9 +108,7 @@ class Star:
                  period: u.Quantity,
                  spots: SpotCollection,
                  faculae: FaculaCollection,
-                 nlat: int = 500,
-                 nlon: int = 1000,
-                 gridmaker: CoordinateGrid = None,
+                 grid_params: Union[int,Tuple[int, int]] = (500, 1000),
                  flare_generator: FlareGenerator = None,
                  spot_generator: SpotGenerator = None,
                  fac_generator: FaculaGenerator = None,
@@ -125,10 +123,9 @@ class Star:
         self.spots = spots
         self.faculae = faculae
         self.rng = rng
-        if not gridmaker:
-            self.gridmaker = RectangularGrid(nlat, nlon)
-        else:
-            self.gridmaker = gridmaker
+        self.gridmaker = CoordinateGrid.new(grid_params)
+        self.grid_params = grid_params
+        
         self.faculae.gridmaker = self.gridmaker
         self.spots.gridmaker = self.gridmaker
 
@@ -144,8 +141,7 @@ class Star:
         if spot_generator is None:
             self.spot_generator = SpotGenerator.from_params(
                 spotparams=SpotParameters.none(),
-                nlat=nlat,
-                nlon=nlon,
+                grid_params=grid_params,
                 gridmaker=self.gridmaker,
                 rng=self.rng
             )
@@ -155,8 +151,7 @@ class Star:
         if fac_generator is None:
             self.fac_generator = FaculaGenerator.from_params(
                 facparams=FaculaParameters.none(),
-                nlat=nlat,
-                nlon=nlon,
+                grid_params=grid_params,
                 gridmaker=self.gridmaker,
                 rng=self.rng
             )
@@ -189,25 +184,20 @@ class Star:
             radius=starparams.radius,
             period=starparams.period,
             teff=starparams.teff,
-            spots=SpotCollection(Nlat=starparams.Nlat, Nlon=starparams.Nlon),
-            faculae=FaculaCollection(
-                nlat=starparams.Nlat, nlon=starparams.Nlon),
-            nlat=starparams.Nlat,
-            nlon=starparams.Nlon,
-            gridmaker=None,
+            spots=SpotCollection(grid_params=starparams.grid_params),
+            faculae=FaculaCollection(grid_params=starparams.grid_params),
+            grid_params=starparams.grid_params,
             flare_generator=FlareGenerator.from_params(
                 starparams.flares, rng=rng),
             spot_generator=SpotGenerator.from_params(
                 spotparams=starparams.spots,
-                nlat=starparams.Nlat,
-                nlon=starparams.Nlon,
+                grid_params=starparams.grid_params,
                 gridmaker=None,
                 rng=rng
             ),
             fac_generator=FaculaGenerator.from_params(
                 facparams=starparams.faculae,
-                nlat=starparams.Nlat,
-                nlon=starparams.Nlon,
+                grid_params=starparams.grid_params,
                 gridmaker=None,
                 rng=rng
             ),

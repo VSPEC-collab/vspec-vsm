@@ -7,7 +7,7 @@ the behavior of spots.
 
 
 """
-from typing import List
+from typing import List, Union, Tuple
 import typing as Typing
 
 import numpy as np
@@ -16,7 +16,7 @@ from astropy.units.quantity import Quantity
 
 from VSPEC.params import SpotParameters
 
-from vspec_vsm.coordinate_grid import RectangularGrid, CoordinateGrid
+from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.config import MSH, starspot_initial_area
 from vspec_vsm import config
 
@@ -117,8 +117,7 @@ class StarSpot:
         is_growing: bool = True,
         growth_rate: Quantity = 0.52/u.day,
         decay_rate: Quantity = 10.89 * MSH/u.day,
-        nlat: int = 500,
-        nlon: int = 1000,
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
         gridmaker: CoordinateGrid = None
     ):
 
@@ -133,7 +132,7 @@ class StarSpot:
         self.growth_rate = growth_rate
 
         if gridmaker is None:
-            self.set_gridmaker(RectangularGrid(nlat, nlon))
+            self.set_gridmaker(CoordinateGrid.new(grid_params))
         else:
             self.set_gridmaker(gridmaker)
 
@@ -354,13 +353,12 @@ class SpotCollection:
     def __init__(
         self,
         *spots: StarSpot,
-        Nlat: int = 500,
-        Nlon: int = 1000,
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
         gridmaker: CoordinateGrid=None
     ):
         self.spots = spots
         if gridmaker is None:
-            self.gridmaker = RectangularGrid(Nlat, Nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         for spot in self.spots:
@@ -573,8 +571,7 @@ class SpotGenerator:
                  init_area: Quantity = 10*MSH,
                  distribution='solar',
                  coverage: float = 0.2,
-                 nlat: int = 500,
-                 nlon: int = 1000,
+                 grid_params: Union[int,Tuple[int, int]] = (500, 1000),
                  gridmaker:CoordinateGrid=None,
                  rng: np.random.Generator = np.random.default_rng()
                  ):
@@ -587,8 +584,9 @@ class SpotGenerator:
         self.init_area = init_area
         self.distribution = distribution
         self.coverage = coverage
+        self.grid_params = grid_params
         if gridmaker is None:
-            self.gridmaker = RectangularGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         self.rng = rng
@@ -597,8 +595,7 @@ class SpotGenerator:
     def from_params(
         cls,
         spotparams: SpotParameters,
-        nlat: int = config.NLAT,
-        nlon: int = config.NLON,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
@@ -632,8 +629,7 @@ class SpotGenerator:
             init_area=starspot_initial_area,
             distribution=spotparams.distribution,
             coverage=spotparams.equillibrium_coverage,
-            nlat=nlat,
-            nlon=nlon,
+            grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
@@ -759,8 +755,7 @@ class SpotGenerator:
                 growth_rate=self.growth_rate,
                 decay_rate=self.decay_rate,
                 area_over_umbra_area=new_area_ratio[i],
-                nlat=self.gridmaker.nlat,
-                nlon=self.gridmaker.nlon,
+                grid_params = self.grid_params,
                 gridmaker=self.gridmaker
             ))
         return tuple(spots)

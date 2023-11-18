@@ -26,8 +26,7 @@ def init_test_spot(**kwargs):
     growing = kwargs.get('growing', True)
     growth_rate = kwargs.get('growth_rate', 0/u.day)
     decay_rate = kwargs.get('decay_rate', 0*MSH/u.day)
-    Nlat = kwargs.get('Nlat', 500)
-    Nlon = kwargs.get('Nlon', 1000)
+    grid_params = kwargs.get('grid_params', 1000)
     gridmaker = kwargs.get('gridmaker', None)
 
     spot = StarSpot(
@@ -41,8 +40,7 @@ def init_test_spot(**kwargs):
         is_growing=growing,
         growth_rate=growth_rate,
         decay_rate=decay_rate,
-        nlat=Nlat,
-        nlon=Nlon,
+        grid_params=grid_params,
         gridmaker=gridmaker
     )
     return spot
@@ -52,15 +50,13 @@ def test_spot_init():
     """
     Test __init__() for starspots
     """
-    spot = init_test_spot()
+    spot = init_test_spot(grid_params=20000)
     assert np.all(spot.r > 0*u.deg)
     assert np.all(spot.r < 180*u.deg)
     assert np.max(spot.r.to_value(u.deg)) == pytest.approx(180, abs=1)
 
     other = init_test_spot(
         gridmaker=RectangularGrid(500+1, 1000),
-        Nlat=None,
-        Nlon=None
     )
     assert spot.gridmaker != other.gridmaker
 
@@ -139,7 +135,7 @@ def test_spot_map_pixels():
                                                             ~umbra)*sin_theta.value).sum(), rel=0.01)
 
     spot = init_test_spot(A0=1e-3*star_surface_area,
-                          r_A=2, Nlon=2000, Nlat=4000)
+                          r_A=2, grid_params=(2000,4000))
     # half and half --> we try to get close to 2D without the discrete grid messing things up
     pixmaps = spot.map_pixels(stellar_rad)
     umbra = pixmaps[spot.teff_umbra]
@@ -204,7 +200,7 @@ def test_init_spot_collection():
     """
     N = 4
     collec = SpotCollection(*[init_test_spot()
-                            for i in range(N)], Nlat=300, Nlon=600)
+                            for i in range(N)], grid_params=(300, 600))
     expected_grid = RectangularGrid(300, 600)
     for spot in collec.spots:
         assert isinstance(spot, StarSpot)
@@ -219,7 +215,7 @@ def test_spot_collection_add_spot():
     """
     N = 4
     collec = SpotCollection(*[init_test_spot()
-                            for i in range(N)], Nlat=300, Nlon=600)
+                            for i in range(N)], grid_params=(300, 600))
     assert len(collec.spots) == N
     new_spot = init_test_spot()
     collec.add_spot(new_spot)
@@ -238,12 +234,12 @@ def test_spot_collection_clean_spotlist():
     N = 4
     spots = [init_test_spot() for i in range(N)] + \
         [init_test_spot(A0=0*MSH, growing=True)]
-    collec = SpotCollection(*spots, Nlat=300, Nlon=600)
+    collec = SpotCollection(*spots, grid_params=(300, 600))
     collec.clean_spotlist()
     assert len(collec.spots) == N+1
     spots = [init_test_spot() for i in range(N)] + \
         [init_test_spot(A0=0*MSH, growing=False)]
-    collec = SpotCollection(*spots, Nlat=300, Nlon=600)
+    collec = SpotCollection(*spots, grid_params=(300, 600))
     collec.clean_spotlist()
     assert len(collec.spots) == N
 
@@ -258,7 +254,7 @@ def test_spot_collection_map_pixels():
         init_test_spot(Teff_umbra=2500*u.K, Teff_penumbra=2500*u.K),
         init_test_spot(Teff_umbra=2700*u.K, Teff_penumbra=2700*u.K)
     ]
-    collec = SpotCollection(*spots, Nlat=300, Nlon=600)
+    collec = SpotCollection(*spots, grid_params=(300, 600))
     pmap = collec.map_pixels(R_star, Teff)
     assert not np.any(pmap == 2700*u.K)
 
@@ -266,7 +262,7 @@ def test_spot_collection_map_pixels():
         init_test_spot(Teff_umbra=3500*u.K, Teff_penumbra=3500*u.K),
         init_test_spot(Teff_umbra=3700*u.K, Teff_penumbra=3700*u.K)
     ]
-    collec = SpotCollection(*spots, Nlat=300, Nlon=600)
+    collec = SpotCollection(*spots, grid_params=(300, 600))
     pmap = collec.map_pixels(R_star, Teff)
     assert np.all(pmap == Teff)
 
@@ -278,7 +274,7 @@ def test_spot_collection_age():
     spot = init_test_spot(A0=10*MSH, Amax=100*MSH, growth_rate=1 /
                           u.day, decay_rate=10*MSH/u.day, growing=True)
     time = 1*u.day
-    collec = SpotCollection(spot, Nlat=300, Nlon=600)
+    collec = SpotCollection(spot, grid_params=(300, 600))
     assert collec.spots[0].area_current == 10*MSH
     collec.age(time)
     assert collec.spots[0].area_current == 20*MSH
@@ -300,8 +296,7 @@ def init_spot_generator(**kwargs):
         init_area=kwargs.get('starting_size', 10*MSH),
         distribution=kwargs.get('distribution', 'iso'),
         coverage=kwargs.get('coverage', 0.0),
-        nlat=kwargs.get('Nlat', 300),
-        nlon=kwargs.get('Nlon', 600),
+        grid_params=kwargs.get('grid_params', (300, 600)),
         rng=rng
     )
 
@@ -311,7 +306,7 @@ def test_spot_generator_init():
     Test `SpotGenerator.__init__()`
     """
     Nlat, Nlon = 300, 600
-    gen = init_spot_generator(Nlat=Nlat, Nlon=Nlon)
+    gen = init_spot_generator(grid_params=(Nlat, Nlon))
     grid = RectangularGrid(Nlat, Nlon)
     assert gen.gridmaker == grid
 
@@ -395,7 +390,7 @@ def test_spot_generator_generate_mature_spots():
         init_area=starting_size,
         distribution='iso',
         coverage=0.2,
-        nlat=500, nlon=1000, rng=rng
+        grid_params=(500, 1000), rng=rng
     )
     with pytest.raises(ValueError):
         gen.generate_mature_spots(-0.1, r_star)

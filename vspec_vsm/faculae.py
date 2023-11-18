@@ -13,7 +13,7 @@ in the faculae lightcurve, we compute the fraction of the facula's normalized
 area -- the area on the disk it would occupy as a flat spot -- that is occupied by
 each the hot wall and cool floor. This is done via numerical integral along the radius of the spot.
 """
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 import warnings
 
 import numpy as np
@@ -22,7 +22,7 @@ from astropy.units.quantity import Quantity
 
 from VSPEC.params import FaculaParameters
 
-from vspec_vsm.coordinate_grid import RectangularGrid, CoordinateGrid
+from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.helpers import round_teff
 from vspec_vsm import config
 
@@ -124,8 +124,7 @@ class Facula:
         wall_teff_slope: Quantity,
         wall_teff_intercept: Quantity,
         growing: bool = True,
-        nlat: int = 500,
-        nlon: int = 1000,
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
         gridmaker: CoordinateGrid = None
     ):
         self.lat = lat
@@ -142,7 +141,7 @@ class Facula:
         self.is_growing = growing
 
         if gridmaker is None:
-            self.gridmaker = RectangularGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
 
@@ -397,13 +396,12 @@ class FaculaCollection:
     """
 
     def __init__(self, *faculae: Tuple[Facula],
-                 nlat: int = config.NLAT,
-                 nlon: int = config.NLON,
+                 grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
                  gridmaker: CoordinateGrid = None):
         self.faculae: Tuple[Facula] = tuple(faculae)
 
         if gridmaker is None:
-            self.gridmaker = RectangularGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         for facula in faculae:
@@ -585,8 +583,7 @@ class FaculaGenerator:
         wall_teff_intercept: Quantity,
         coverage: float,
         dist: str = 'iso',
-        nlon: int = config.NLON,
-        nlat: int = config.NLAT,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
@@ -611,19 +608,17 @@ class FaculaGenerator:
             raise ValueError(f'Unknown distribution `{dist}`.')
         self.dist = dist
         if gridmaker is None:
-            self.gridmaker = RectangularGrid(nlat, nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
-        self.nlon = nlon
-        self.nlat = nlat
+        self.grid_params = grid_params
         self.rng = rng
 
     @classmethod
     def from_params(
         cls,
         facparams: FaculaParameters,
-        nlat: int = config.NLAT,
-        nlon: int = config.NLON,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
@@ -656,8 +651,7 @@ class FaculaGenerator:
             wall_teff_intercept=facparams.wall_teff_intercept,
             coverage=facparams.equillibrium_coverage,
             dist=facparams.distribution,
-            nlat=nlat,
-            nlon=nlon,
+            grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
@@ -772,8 +766,7 @@ class FaculaGenerator:
                     wall_teff_slope=self.wall_teff_slope,
                     wall_teff_intercept=self.wall_teff_intercept,
                     growing=True,
-                    nlat=self.nlat,
-                    nlon=self.nlon,
+                    grid_params=self.grid_params,
                     gridmaker=self.gridmaker
                 )
             )

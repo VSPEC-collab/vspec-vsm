@@ -7,7 +7,7 @@ the behavior of spots.
 
 
 """
-from typing import List
+from typing import List, Union, Tuple
 import typing as Typing
 
 import numpy as np
@@ -49,7 +49,8 @@ class StarSpot:
     Teff_penumbra : astropy.units.Quantity 
         The effective temperature of spot penumbra.
     r_A : float
-        The ratio of total spot area to umbra area. 5+/-1 according to :cite:t:`2003A&ARv..11..153S`.
+        The ratio of total spot area to umbra area. 5+/-1 according
+        to :cite:t:`2003A&ARv..11..153S`.
     growing : bool
         Whether or not the spot is growing.
     growth_rate : astropy.units.Quantity 
@@ -105,24 +106,33 @@ class StarSpot:
     """
 
     def __init__(
-        self, lat: Quantity, lon: Quantity, Amax: Quantity, A0: Quantity,
-        Teff_umbra: Quantity, Teff_penumbra: Quantity, r_A: float = 5, growing: bool = True,
-        growth_rate: Quantity = 0.52/u.day, decay_rate: Quantity = 10.89 * MSH/u.day,
-        Nlat: int = 500, Nlon: int = 1000, gridmaker=None
+        self,
+        lat: Quantity,
+        lon: Quantity,
+        area_max: Quantity,
+        area_current: Quantity,
+        teff_umbra: Quantity,
+        teff_penumbra: Quantity,
+        area_over_umbra_area: float = 5,
+        is_growing: bool = True,
+        growth_rate: Quantity = 0.52/u.day,
+        decay_rate: Quantity = 10.89 * MSH/u.day,
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+        gridmaker: CoordinateGrid = None
     ):
 
         self.coords = {'lat': lat, 'lon': lon}
-        self.area_max = Amax
-        self.area_current = A0
-        self.Teff_umbra = Teff_umbra
-        self.Teff_penumbra = Teff_penumbra
+        self.area_max = area_max
+        self.area_current = area_current
+        self.teff_umbra = teff_umbra
+        self.teff_penumbra = teff_penumbra
         self.decay_rate = decay_rate
-        self.total_area_over_umbra_area = r_A
-        self.is_growing = growing
+        self.total_area_over_umbra_area = area_over_umbra_area
+        self.is_growing = is_growing
         self.growth_rate = growth_rate
 
         if gridmaker is None:
-            self.set_gridmaker(CoordinateGrid(Nlat, Nlon))
+            self.set_gridmaker(CoordinateGrid.new(grid_params))
         else:
             self.set_gridmaker(gridmaker)
 
@@ -144,7 +154,7 @@ class StarSpot:
 
     def __str__(self):
         s = 'StarSpot with '
-        s += f'Teff = ({self.Teff_umbra:.0f},{self.Teff_penumbra:.0f}), '
+        s += f'Teff = ({self.teff_umbra:.0f},{self.teff_penumbra:.0f}), '
         s += f'area = {self.area_current.to(MSH):.0f}, '
         s += f'lat = {self.coords["lat"]:.1f}, lon = {self.coords["lon"]:.1f}'
         return s
@@ -207,11 +217,11 @@ class StarSpot:
         """
         radius = self.angular_radius(star_rad)
         radius_umbra = radius/np.sqrt(self.total_area_over_umbra_area)
-        return {self.Teff_umbra: self.r < radius_umbra,
-                self.Teff_penumbra: self.r < radius}
+        return {self.teff_umbra: self.r < radius_umbra,
+                self.teff_penumbra: self.r < radius}
 
     def surface_fraction(self, sub_obs_coords: dict,
-                         star_rad: Quantity, N: int = 1001) -> float:
+                         star_rad: Quantity, n_points: int = 1001) -> float:
         """
         Determine the surface fraction covered by a spot from a given 
         angle of observation using the orthographic projection.
@@ -239,7 +249,7 @@ class StarSpot:
                   + np.cos(sub_obs_coords['lat']) * np.cos(self.coords['lat'])
                   * np.cos(sub_obs_coords['lon']-self.coords['lon']))
         c0 = np.arccos(cos_c0)
-        c = np.linspace(-90, 90, N)*u.deg
+        c = np.linspace(-90, 90, n_points)*u.deg
         a = self.angular_radius(star_rad).to(u.deg)
         rad = a**2 - (c-c0)**2
         rad[rad < 0] = 0
@@ -340,10 +350,15 @@ class SpotCollection:
         `CoordinateGrid` object used to calculate the grid of the stellar surface.
     """
 
-    def __init__(self, *spots: StarSpot, Nlat: int = 500, Nlon: int = 1000, gridmaker=None):
+    def __init__(
+        self,
+        *spots: StarSpot,
+        grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+        gridmaker: CoordinateGrid=None
+    ):
         self.spots = spots
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         for spot in self.spots:
@@ -420,13 +435,13 @@ class SpotCollection:
         for spot in self.spots:
             teff_dict = spot.map_pixels(star_rad)
             # penumbra
-            penumbra = teff_dict[spot.Teff_penumbra] & (
-                surface_map > spot.Teff_penumbra)
+            penumbra = teff_dict[spot.teff_penumbra] & (
+                surface_map > spot.teff_penumbra)
             # umbra
-            umbra = teff_dict[spot.Teff_umbra] & (
-                surface_map > spot.Teff_umbra)
-            surface_map = np.where(umbra, spot.Teff_umbra, np.where(
-                penumbra, spot.Teff_penumbra, surface_map))
+            umbra = teff_dict[spot.teff_umbra] & (
+                surface_map > spot.teff_umbra)
+            surface_map = np.where(umbra, spot.teff_umbra, np.where(
+                penumbra, spot.teff_penumbra, surface_map))
         return surface_map
 
     def age(self, time: Quantity) -> None:
@@ -463,11 +478,10 @@ class SpotCollection:
             The fraction of the stellar surface covered by spots.
         """
         teff_star = np.inf*u.K
-        lats2d, _ = self.gridmaker.grid()
-        jacobian = np.cos(lats2d).value
+        area = self.gridmaker.area
         tmap = self.map_pixels(r_star, teff_star)
         is_spot = tmap != teff_star
-        return np.sum(jacobian*is_spot)/np.sum(jacobian)
+        return np.sum(area*is_spot)/np.sum(area)
 
 
 class SpotGenerator:
@@ -557,9 +571,8 @@ class SpotGenerator:
                  init_area: Quantity = 10*MSH,
                  distribution='solar',
                  coverage: float = 0.2,
-                 Nlat: int = 500,
-                 Nlon: int = 1000,
-                 gridmaker=None,
+                 grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+                 gridmaker:CoordinateGrid=None,
                  rng: np.random.Generator = np.random.default_rng()
                  ):
         self.dist_area_mean = dist_area_mean
@@ -571,8 +584,9 @@ class SpotGenerator:
         self.init_area = init_area
         self.distribution = distribution
         self.coverage = coverage
+        self.grid_params = grid_params
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid(Nlat, Nlon)
+            self.gridmaker = CoordinateGrid.new(grid_params)
         else:
             self.gridmaker = gridmaker
         self.rng = rng
@@ -581,8 +595,7 @@ class SpotGenerator:
     def from_params(
         cls,
         spotparams: SpotParameters,
-        nlat: int = config.nlat,
-        nlon: int = config.nlon,
+        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
@@ -616,8 +629,7 @@ class SpotGenerator:
             init_area=starspot_initial_area,
             distribution=spotparams.distribution,
             coverage=spotparams.equillibrium_coverage,
-            Nlat=nlat,
-            Nlon=nlon,
+            grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
@@ -663,18 +675,18 @@ class SpotGenerator:
         if self.is_static:
             return self.dist_area_mean
         else:
-            Adt = (self.dist_area_mean / self.growth_rate) \
+            integrated_area = (self.dist_area_mean / self.growth_rate) \
                 + (self.init_area / self.growth_rate) \
                 + (self.dist_area_mean**2/2/self.decay_rate)
-            return Adt / self.mean_lifetime
+            return integrated_area / self.mean_lifetime
 
-    def get_coordinates(self, N: int):
+    def get_coordinates(self, n_spots: int):
         """
         Get coordinates for a `StarSpot` distribution.
 
         Parameters
         ----------
-        N : int
+        n_spots : int
             Number of spots to create.
 
         Returns
@@ -691,26 +703,26 @@ class SpotGenerator:
         """
         if self.distribution == 'solar':
             # (dist approx from 2017ApJ...851...70M)
-            hemi = self.rng.choice([-1, 1], size=N)
-            lat = self.rng.normal(15, 5, size=N)*hemi*u.deg
-            lon = self.rng.random(size=N)*360*u.deg
+            hemi = self.rng.choice([-1, 1], size=n_spots)
+            lat = self.rng.normal(15, 5, size=n_spots)*hemi*u.deg
+            lon = self.rng.random(size=n_spots)*360*u.deg
         elif self.distribution == 'iso':
-            lon = self.rng.random(size=N)*360*u.deg
+            lon = self.rng.random(size=n_spots)*360*u.deg
             # use inverse transform to generate lats
-            X = self.rng.random(size=N)
-            lat = np.arcsin(2*X - 1)/np.pi * 180*u.deg
+            x = self.rng.random(size=n_spots)
+            lat = np.arcsin(2*x - 1)/np.pi * 180*u.deg
         else:
             raise ValueError(
                 f'Unknown value {self.distribution} for distribution')
         return lat, lon
 
-    def generate_spots(self, N: int) -> tuple[StarSpot]:
+    def generate_spots(self, n_spots: int) -> tuple[StarSpot]:
         """
         Create a specified number of `StarSpot` objects.
 
         Parameters
         ----------
-        N : int
+        n_spots: int
             Number of spots to create.
 
         Returns
@@ -724,27 +736,34 @@ class SpotGenerator:
             If an unknown value is given for distribution.
         """
         new_max_areas = self.rng.lognormal(mean=np.log(
-            self.dist_area_mean/MSH), sigma=self.dist_area_logsigma, size=N)*MSH
-        new_r_A = self.rng.normal(loc=5, scale=1, size=N)
-        while np.any(new_r_A <= 0):
-            new_r_A = self.rng.normal(loc=5, scale=1, size=N)
-        lat, lon = self.get_coordinates(N)
+            self.dist_area_mean/MSH), sigma=self.dist_area_logsigma, size=n_spots)*MSH
+        new_area_ratio = self.rng.normal(loc=5, scale=1, size=n_spots)
+        while np.any(new_area_ratio <= 0):
+            new_area_ratio = self.rng.normal(loc=5, scale=1, size=n_spots)
+        lat, lon = self.get_coordinates(n_spots)
 
         penumbra_teff = self.penumbra_teff
         umbra_teff = self.umbra_teff
 
         spots = []
-        for i in range(N):
+        for i in range(n_spots):
             spots.append(StarSpot(
-                lat[i], lon[i], new_max_areas[i], self.init_area, umbra_teff, penumbra_teff,
-                growth_rate=self.growth_rate, decay_rate=self.decay_rate,
-                r_A=new_r_A[i], Nlat=self.gridmaker.Nlat, Nlon=self.gridmaker.Nlon, gridmaker=self.gridmaker
+                lat[i], lon[i],
+                new_max_areas[i],
+                self.init_area,
+                umbra_teff, penumbra_teff,
+                growth_rate=self.growth_rate,
+                decay_rate=self.decay_rate,
+                area_over_umbra_area=new_area_ratio[i],
+                grid_params = self.grid_params,
+                gridmaker=self.gridmaker
             ))
         return tuple(spots)
 
-    def get_N_spots_to_birth(self, time: Quantity, rad_star: Quantity) -> float:
+    def get_n_spots_to_birth(self, time: Quantity, rad_star: Quantity) -> float:
         """
-        Calculate how many new `StarSpot` objects to birth over a given time duration (expectation value).
+        Calculate how many new `StarSpot` objects to birth over
+        a given time duration (expectation value).
 
         Parameters
         ----------
@@ -759,9 +778,9 @@ class SpotGenerator:
         N_exp : float
             Expected number of new `StarSpot` objects.
         """
-        N_exp = (self.coverage * 4*np.pi*rad_star**2 / self.mean_area *
+        n_expected = (self.coverage * 4*np.pi*rad_star**2 / self.mean_area *
                  time / self.mean_lifetime).to_value(u.dimensionless_unscaled)
-        return N_exp
+        return n_expected
 
     def birth_spots(self, time: Quantity, rad_star: Quantity) -> tuple[StarSpot]:
         """
@@ -780,14 +799,14 @@ class SpotGenerator:
         Tuple[StarSpot]
             New `StarSpot` objects.
         """
-        N_exp = self.get_N_spots_to_birth(time, rad_star)
+        n_expected = self.get_n_spots_to_birth(time, rad_star)
         # N_exp is the expectation value of N, but this is a poisson process
         # N = max(0, round(np.random.normal(loc=N_exp, scale=np.sqrt(N_exp))))
-        N = self.rng.poisson(lam=N_exp)
+        n_actual = self.rng.poisson(lam=n_expected)
 
-        return self.generate_spots(N)
+        return self.generate_spots(n_actual)
 
-    def generate_mature_spots(self, coverage: float, R_star: Quantity) -> List[StarSpot]:
+    def generate_mature_spots(self, coverage: float, r_star: Quantity) -> List[StarSpot]:
         """Generate mature StarSpot objects to cover a given fraction of the star's surface.
 
         This method generates mature spots such that the total solid angle subtended by the spots
@@ -797,7 +816,7 @@ class SpotGenerator:
         ----------
         coverage : float
             The fraction of the star's surface to be covered by the spots.
-        R_star : astropy.units.Quantity 
+        r_star : astropy.units.Quantity 
             The radius of the star.
 
         Returns:
@@ -822,6 +841,6 @@ class SpotGenerator:
                 age = self.rng.random() * self.mean_lifetime
                 new_spot.age(age)
             spots.append(new_spot)
-            spot_solid_angle = new_spot.angular_radius(R_star)**2 * np.pi
+            spot_solid_angle = new_spot.angular_radius(r_star)**2 * np.pi
             current_omega += spot_solid_angle
         return spots

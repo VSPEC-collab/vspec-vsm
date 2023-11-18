@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from vspec_vsm.faculae import Facula, FaculaCollection, FaculaGenerator
-from vspec_vsm.coordinate_grid import CoordinateGrid
+from vspec_vsm.coordinate_grid import RectangularGrid
 
 
 def init_facula(**kwargs):
@@ -24,8 +24,7 @@ def init_facula(**kwargs):
         lifetime=kwargs.get('lifetime', 10*u.hr),
         growing=kwargs.get('growing', True),
         depth=kwargs.get('Zw', 100*u.km),
-        nlat=kwargs.get('Nlat', 300),
-        nlon=kwargs.get('Nlon', 600),
+        grid_params=kwargs.get('grid_params', (300, 600)),
         gridmaker=kwargs.get('gridmaker', None),
         floor_teff_base_dteff=kwargs.get('floor_teff_base_dteff',100*u.K),
         wall_teff_intercept=kwargs.get('wall_teff_intercept',0*u.K),
@@ -69,12 +68,12 @@ def test_facula_effective_area():
     depth = 0*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 0*u.deg
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert d[dtwall] == 0*aunit
     assert d[dtfloor].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2).to_value(aunit), rel=1e-3)
     angle = 5*u.deg
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert d[dtwall] == 0*aunit
     assert d[dtfloor].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -83,7 +82,7 @@ def test_facula_effective_area():
     depth = 1e9*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 5*u.deg
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert d[dtfloor] == 0*aunit
     assert d[dtwall].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -92,17 +91,17 @@ def test_facula_effective_area():
     depth = 100*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 5*u.deg
-    d1 = fac.effective_area(angle, N=201)
+    d1 = fac.effective_area(angle, n_points=201)
     angle = 6*u.deg
-    d2 = fac.effective_area(angle, N=201)
+    d2 = fac.effective_area(angle, n_points=201)
     assert d1[dtfloor]/d1[dtwall] > d2[dtfloor]/d2[dtwall]
     assert d1[dtfloor] > d2[dtfloor]
     assert d1[dtwall] < d2[dtwall]
     angle = np.arctan(2*radius/depth)  # critical
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert d[dtfloor].to_value(aunit) == pytest.approx(0, abs=1e-6)
     angle = np.arctan(2*radius/depth) - 1*u.deg  # not quite critical
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert not d[dtfloor].to_value(aunit) == pytest.approx(0, abs=1e-6)
     # threshold not reached case
     radius = 100*u.km
@@ -111,7 +110,7 @@ def test_facula_effective_area():
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor,
                       wall_teff_intercept=dtwall, Zw=depth, floor_teff_min_rad=threshold)
     angle = 5*u.deg
-    d = fac.effective_area(angle, N=201)
+    d = fac.effective_area(angle, n_points=201)
     assert d[dtfloor] == 0*aunit
     assert d[dtwall].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -127,15 +126,15 @@ def test_facula_fractional_effective_area():
     depth = 100*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 0*u.deg
-    d = fac.fractional_effective_area(angle, N=201)
+    d = fac.fractional_effective_area(angle, n_points=201)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
     angle = 5*u.deg
-    d = fac.fractional_effective_area(angle, N=201)
+    d = fac.fractional_effective_area(angle, n_points=201)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
     angle = 90*u.deg
-    d = fac.fractional_effective_area(angle, N=201)
+    d = fac.fractional_effective_area(angle, n_points=201)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
 
@@ -179,9 +178,9 @@ def test_fac_collection_init():
     Test `FaculaCollection.__init__()`
     """
     N = 4
-    collec = FaculaCollection(*[init_facula(Nlat=400, Nlon=600)
-                              for i in range(N)], nlat=300, nlon=600)
-    expected_grid = CoordinateGrid(300, 600)
+    collec = FaculaCollection(*[init_facula(grid_params=(400, 600))
+                              for _ in range(N)], grid_params=(300, 600))
+    expected_grid = RectangularGrid(300, 600)
     for facula in collec.faculae:
         assert isinstance(facula, Facula)
     assert collec.gridmaker == expected_grid
@@ -194,8 +193,8 @@ def test_fac_collection_add_facula():
     Test `FaculaCollection.add_facula()`
     """
     N = 4
-    collec = FaculaCollection(*[init_facula(Nlat=400, Nlon=600)
-                              for i in range(N)], nlat=300, nlon=600)
+    collec = FaculaCollection(*[init_facula(grid_params=(400, 600))
+                              for _ in range(N)], grid_params=(300, 600))
     assert len(collec.faculae) == N
     collec.add_faculae(init_facula(Nlat=400, Nlon=600))
     assert len(collec.faculae) == N+1
@@ -268,11 +267,11 @@ def test_fac_gen_init():
         wall_teff_slope=0*u.K/u.km,
         wall_teff_intercept=100*u.K,
         coverage=0.01,
-        nlon=600,nlat=300
+        grid_params=(300,600)
     )
     assert isinstance(gen.dist_r_peak, u.Quantity)
     assert isinstance(gen.dist_r_logsigma, float)
     assert isinstance(gen.dist_life_peak, u.Quantity)
     assert isinstance(gen.dist_life_logsigma, float)
-    assert gen.gridmaker == CoordinateGrid(300, 600)
+    assert gen.gridmaker == RectangularGrid(300, 600)
 

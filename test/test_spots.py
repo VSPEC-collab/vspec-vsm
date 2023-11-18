@@ -33,16 +33,16 @@ def init_test_spot(**kwargs):
     spot = StarSpot(
         lat=lat,
         lon=lon,
-        Amax=Amax,
-        A0=A0,
-        Teff_umbra=Teff_umbra,
-        Teff_penumbra=Teff_penumbra,
-        r_A=r_A,
-        growing=growing,
+        area_max=Amax,
+        area_current=A0,
+        teff_umbra=Teff_umbra,
+        teff_penumbra=Teff_penumbra,
+        area_over_umbra_area=r_A,
+        is_growing=growing,
         growth_rate=growth_rate,
         decay_rate=decay_rate,
-        Nlat=Nlat,
-        Nlon=Nlon,
+        nlat=Nlat,
+        nlon=Nlon,
         gridmaker=gridmaker
     )
     return spot
@@ -115,15 +115,15 @@ def test_spot_map_pixels():
     star_surface_area = 4*np.pi*stellar_rad**2
     spot = init_test_spot(A0=star_surface_area, r_A=1)  # no penumbra
     pixmaps = spot.map_pixels(stellar_rad)
-    umbra = pixmaps[spot.Teff_umbra]
-    penumbra = pixmaps[spot.Teff_penumbra]
+    umbra = pixmaps[spot.teff_umbra]
+    penumbra = pixmaps[spot.teff_penumbra]
     assert np.all(umbra)
     assert not np.any(penumbra & ~umbra)
 
     spot = init_test_spot(A0=star_surface_area, r_A=np.inf)  # no umbra
     pixmaps = spot.map_pixels(stellar_rad)
-    umbra = pixmaps[spot.Teff_umbra]
-    penumbra = pixmaps[spot.Teff_penumbra]
+    umbra = pixmaps[spot.teff_umbra]
+    penumbra = pixmaps[spot.teff_penumbra]
     assert np.all(penumbra)
     assert not np.any(umbra)
 
@@ -131,8 +131,8 @@ def test_spot_map_pixels():
     # half and half --> This is a sphere, so our 2D approximation goes out the window
     # for a large radius spot.
     pixmaps = spot.map_pixels(stellar_rad)
-    umbra = pixmaps[spot.Teff_umbra]
-    penumbra = pixmaps[spot.Teff_penumbra]
+    umbra = pixmaps[spot.teff_umbra]
+    penumbra = pixmaps[spot.teff_penumbra]
     lats, _ = spot.gridmaker.grid()
     sin_theta = np.cos(lats)
     assert (umbra*sin_theta.value).sum() == pytest.approx(((penumbra &
@@ -142,8 +142,8 @@ def test_spot_map_pixels():
                           r_A=2, Nlon=2000, Nlat=4000)
     # half and half --> we try to get close to 2D without the discrete grid messing things up
     pixmaps = spot.map_pixels(stellar_rad)
-    umbra = pixmaps[spot.Teff_umbra]
-    penumbra = pixmaps[spot.Teff_penumbra]
+    umbra = pixmaps[spot.teff_umbra]
+    penumbra = pixmaps[spot.teff_penumbra]
     lats, _ = spot.gridmaker.grid()
     sin_theta = np.cos(lats)
     assert (umbra*sin_theta.value).sum() == pytest.approx(
@@ -300,8 +300,8 @@ def init_spot_generator(**kwargs):
         init_area=kwargs.get('starting_size', 10*MSH),
         distribution=kwargs.get('distribution', 'iso'),
         coverage=kwargs.get('coverage', 0.0),
-        Nlat=kwargs.get('Nlat', 300),
-        Nlon=kwargs.get('Nlon', 600),
+        nlat=kwargs.get('Nlat', 300),
+        nlon=kwargs.get('Nlon', 600),
         rng=rng
     )
 
@@ -344,7 +344,7 @@ def test_spot_generator_N_spots_to_birth():
     gen = init_spot_generator(average_area=100*MSH,
                               coverage=0.0, decay_rate=10*MSH/u.day, growth_rate=0.5/u.day)
     exp = 0.0
-    assert gen.get_N_spots_to_birth(
+    assert gen.get_n_spots_to_birth(
         time, r_star) == pytest.approx(exp, abs=1e-6)
 
 
@@ -395,7 +395,7 @@ def test_spot_generator_generate_mature_spots():
         init_area=starting_size,
         distribution='iso',
         coverage=0.2,
-        Nlat=500, Nlon=1000, rng=rng
+        nlat=500, nlon=1000, rng=rng
     )
     with pytest.raises(ValueError):
         gen.generate_mature_spots(-0.1, r_star)

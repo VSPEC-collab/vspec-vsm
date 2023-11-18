@@ -85,7 +85,7 @@ def test_get_pixelmap(star:Star):
     pixelmap = star.map
 
     assert isinstance(pixelmap, u.Quantity)
-    assert pixelmap.shape == (star.gridmaker.Nlon, star.gridmaker.Nlat)
+    assert pixelmap.shape == (star.gridmaker.nlon, star.gridmaker.nlat)
     assert pixelmap.unit == u.K
 
 def test_star_with_granulation():
@@ -106,7 +106,7 @@ def test_star_with_custom_gridmaker():
     period = 10 * u.day
     spots = SpotCollection()
     faculae = FaculaCollection()
-    gridmaker = RectangularGrid(Nlat=200, Nlon=500)
+    gridmaker = RectangularGrid(nlat=200, nlon=500)
     star = Star(Teff, radius, period, spots, faculae, gridmaker=gridmaker)
 
     assert isinstance(star.gridmaker, RectangularGrid)
@@ -429,4 +429,4 @@ def test_calc_coverage():
 
 
 if __name__ in '__main__':
-    test_transit_mask()
+    pytest.main(args=[__file__])

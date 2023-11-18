@@ -12,9 +12,9 @@ def test_rectangulargrid():
     """
     Tests for the CoordinateGrid class.
     """
-    grid = RectangularGrid(Nlat=100, Nlon=200)
-    assert grid.Nlat == 100
-    assert grid.Nlon == 200
+    grid = RectangularGrid(nlat=100, nlon=200)
+    assert grid.nlat == 100
+    assert grid.nlon == 200
 
 
 def test_coodinategrid_typeerror():
@@ -22,16 +22,16 @@ def test_coodinategrid_typeerror():
     Tests for the CoordinateGrid class initialized with floats.
     """
     with pytest.raises(TypeError):
-        _ = RectangularGrid(Nlat=100, Nlon=200.0)
+        _ = RectangularGrid(nlat=100, nlon=200.0)
     with pytest.raises(TypeError):
-        _ = RectangularGrid(Nlat=100.0, Nlon=200)
+        _ = RectangularGrid(nlat=100.0, nlon=200)
 
 
 def test_rectangulargrid_oned():
     """
     Tests for the CoordinateGrid oned method.
     """
-    grid = RectangularGrid(Nlat=100, Nlon=200)
+    grid = RectangularGrid(nlat=100, nlon=200)
     lats, lons = grid.oned()
     assert lats.shape == (100,)
     assert lons.shape == (200,)
@@ -41,7 +41,7 @@ def test_rectangulargrid_grid():
     """
     Tests for the CoordinateGrid grid method.
     """
-    grid = RectangularGrid(Nlat=100, Nlon=200)
+    grid = RectangularGrid(nlat=100, nlon=200)
     lats, lons = grid.grid()
     assert lats.shape == (200, 100)
     assert lons.shape == (200, 100)
@@ -51,7 +51,7 @@ def test_rectangulargrid_zeros():
     """
     Tests for the CoordinateGrid zeros method.
     """
-    grid = RectangularGrid(Nlat=100, Nlon=200)
+    grid = RectangularGrid(nlat=100, nlon=200)
     arr = grid.zeros()
     assert arr.shape == (200, 100)
     assert arr.dtype == np.float32
@@ -62,24 +62,24 @@ def test_rectangulargrid_eq():
     """
     Tests for the CoordinateGrid __eq__ method.
     """
-    grid1 = RectangularGrid(Nlat=100, Nlon=200)
-    grid2 = RectangularGrid(Nlat=100, Nlon=200)
+    grid1 = RectangularGrid(nlat=100, nlon=200)
+    grid2 = RectangularGrid(nlat=100, nlon=200)
     assert grid1 == grid2
 
     with pytest.raises(TypeError):
         _ = grid1 == 1
 
-    grid3 = RectangularGrid(Nlat=101, Nlon=200)
+    grid3 = RectangularGrid(nlat=101, nlon=200)
     assert grid1 != grid3
 
-    grid4 = RectangularGrid(Nlat=200, Nlon=100)
+    grid4 = RectangularGrid(nlat=200, nlon=100)
     assert grid1 != grid4
 
 def test_rectangulargrid_display():
     """
     Tests for the CoordinateGrid display method.
     """
-    grid = RectangularGrid(Nlat=100, Nlon=200)
+    grid = RectangularGrid(nlat=100, nlon=200)
     lat,lons = grid.grid()
     data = np.sin(2*lat)*np.cos(2*lons)
     llat,llon,dat = grid.display_grid(100,200,data)

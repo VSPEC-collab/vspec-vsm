@@ -20,13 +20,14 @@ including radius, period, and the effective temperature of quiet photosphere.
 Herein we refer to this temperature as the photosphere temperature to differentiate
 it from the temperature of spots, faculae, or other sources of variability.
 """
+from typing import Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.units.quantity import Quantity
-from typing import Tuple
+from scipy.integrate import dblquad
 
-from vspec_vsm.coordinate_grid import RectangularGrid
+from vspec_vsm.coordinate_grid import RectangularGrid, CoordinateGrid
 from vspec_vsm.helpers import get_angle_between, proj_ortho, calc_circ_fraction_inside_unit_circle, clip_teff
 from vspec_vsm.spots import SpotCollection, SpotGenerator
 from vspec_vsm.faculae import FaculaCollection, FaculaGenerator, Facula
@@ -105,7 +106,7 @@ class Star:
                  faculae: FaculaCollection,
                  Nlat: int = 500,
                  Nlon: int = 1000,
-                 gridmaker: RectangularGrid = None,
+                 gridmaker: CoordinateGrid = None,
                  flare_generator: FlareGenerator = None,
                  spot_generator: SpotGenerator = None,
                  fac_generator: FaculaGenerator = None,
@@ -442,7 +443,7 @@ class Star:
              ).to_value(u.dimensionless_unscaled)
         y = (orbit_radius/self.radius * np.cos(angle_past_midtransit)
              * np.cos(inclination)).to_value(u.dimensionless_unscaled)
-        rad = (radius/self.radius).to_value(u.dimensionless_unscaled)
+        rad:float = (radius/self.radius).to_value(u.dimensionless_unscaled)
         if np.sqrt(x**2 + y**2) > 1 + 2*rad:  # no transit
             return self.gridmaker.zeros().astype('bool'), 1.0
         elif eclipse:
@@ -451,26 +452,34 @@ class Star:
             return self.gridmaker.zeros().astype('bool'), planet_fraction
         else:
             llat, llon = self.gridmaker.grid()
-            dlat = self.gridmaker.dlat
-            dlon = self.gridmaker.dlon
             xcoord, ycoord = proj_ortho(lat0, lon0, llat, llon)
-            rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2) # map of pixel centers
-            pixels_to_consider = np.where(rad_map <= rad*1.3, 1, 0).astype('bool')
-            covered_value = np.where(rad_map <= rad*1.3, 1, 0).astype('float')
-            indicies = np.argwhere(pixels_to_consider)
-            n_subdiv = 5
+            mu = self.gridmaker.cos_angle_from_disk_center(lat0, lon0)
+            area = self.gridmaker.area # area in units of 4pi steradians
+            point_radii = np.sqrt(area) # radius of each pixel in radians
+            proj_radii = point_radii*mu # radius of each pixel in projected coords
+            rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2) # distances in projected coords
+            # case 1: Point is completely outside transit radius
+            case1 = (rad_map > rad + 2*proj_radii) | np.isnan(rad_map)
+            
+            covered_value = np.where(~case1, 1, 0).astype('float')
+            indicies = np.argwhere(~case1)
             for index in indicies:
-                i = index[0]
-                j = index[1]
-                lon = llon[i,j]
-                lat = llat[i,j]
-                lats = np.linspace(-0.5,0.5,n_subdiv,endpoint=False)*dlat + lat
-                lons = np.linspace(-0.5,0.5,n_subdiv,endpoint=False)*dlon + lon
-                latgrid,longrid = np.meshgrid(lats,lons)
-                xs, ys = proj_ortho(lat0,lon0,latgrid,longrid)
-                radii = np.sqrt((x-xs)**2+(y-ys)**2)
-                frac_inside = np.sum(radii<rad)/np.size(radii)
-                covered_value[i,j] = frac_inside        
+                s = index if index is int else tuple(index)
+                dist_from_transit_center:float = rad_map[s]
+                gauss_sigma = proj_radii[s]
+                def fun(r,theta):
+                    """
+                    Function from: https://math.stackexchange.com/questions/2358965/integral-of-multivariable-gaussian-across-a-circular-domain
+                    """
+                    # r*e**a*e**b
+                    a = -r**2/(2*gauss_sigma**2)
+                    b = (2*r*dist_from_transit_center*np.cos(theta))/(2*gauss_sigma**2)
+                    return r * np.exp(a) * np.exp(b)
+                overlap, _ = dblquad(fun,0,2*np.pi,0,rad, epsabs=1e-3, epsrel=1e-3)
+                del fun # this function is defined in a loop, so
+                        # we should make sure it is not called elsewhere
+                normalized_overlap = overlap/(2*np.pi*rad**2)
+                covered_value[s] = normalized_overlap
             return covered_value, 1.0
 
     def calc_coverage(
@@ -608,7 +617,9 @@ class Star:
         orbit_radius: u.Quantity = 1*u.AU,
         radius: u.Quantity = 1*u.R_earth,
         phase: u.Quantity = 90*u.deg,
-        inclination: u.Quantity = 0*u.deg
+        inclination: u.Quantity = 0*u.deg,
+        nlon: int = 1000,
+        nlat: int = 500
     ):
         """
         Add the transit to the surface map and plot.
@@ -631,21 +642,27 @@ class Star:
             phase=phase,
             inclination=inclination
         )
-        map_with_faculae = self.add_faculae_to_map(lat0, lon0).to_value(u.K)
-        lat, lon = self.gridmaker.oned()
-        lat = lat.to_value(u.deg)
-        lon = lon.to_value(u.deg)
-        im = ax.pcolormesh(lon, lat, map_with_faculae.T,
+        map_with_faculae = self.add_faculae_to_map(lat0, lon0)
+        
+        lats, lons, data = self.gridmaker.display_grid(nlat, nlon,map_with_faculae)
+        
+        lats = (lats*u.rad).to_value(u.deg)
+        lons = (lons*u.rad).to_value(u.deg)
+        data = data.to_value(u.K)
+        im = ax.pcolormesh(lons, lats, data.T,
                            transform=ccrs.PlateCarree())
         plt.colorbar(im, ax=ax, label=r'$T_{\rm eff}$ (K)')
-        transit_mask = np.where(covered, 1, np.nan)
+        
+        _, _, data = self.gridmaker.display_grid(nlat, nlon,covered)
+        
+        transit_mask = np.where(data>0.5, 1, np.nan)
         zorder = 100 if pl_frac == 1. else -100
-        ax.contourf(lon, lat, transit_mask.T, colors='k', alpha=1,
+        ax.contourf(lons, lats, transit_mask.T, colors='k', alpha=1,
                     transform=ccrs.PlateCarree(), zorder=zorder)
         mu = self.get_mu(lat0, lon0)
         ld = self.ld_mask_for_plotting(mu)
         alpha = 1-ld.T/np.max(ld.T)
-        ax.imshow(np.ones_like(ld), extent=(lon.min(), lon.max(), lat.min(), lat.max()),
+        ax.imshow(np.ones_like(ld), extent=(lons.min(), lons.max(), lats.min(), lats.max()),
                   transform=ccrs.PlateCarree(), origin='lower', alpha=alpha, cmap=plt.cm.get_cmap('gray'), zorder=100)
 
     def get_flares_over_observation(self, time_duration: Quantity):

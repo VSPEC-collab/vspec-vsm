@@ -78,8 +78,7 @@ star = Star(
     period=star_period,
     spots=spots,
     faculae=faculae,
-    nlat=Nlat,
-    nlat=Nlon,
+    grid_params=(Nlat, Nlon),
     **ld_params
 )
 # %%

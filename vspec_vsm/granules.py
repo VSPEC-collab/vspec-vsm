@@ -1,5 +1,8 @@
 """
-Granulation model for VSPEC
+
+Granulation
+-----------
+
 """
 import jax
 import jax.numpy as jnp

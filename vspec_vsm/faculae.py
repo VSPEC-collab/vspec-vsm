@@ -1,4 +1,7 @@
 """
+Faculae
+-------
+
 Faculae are magnetically-generated regions of the solar
 surface that usually appear as bright points near the limb;
 we employ the ``hot wall'' model :cite:p:`1976SoPh...50..269S` where

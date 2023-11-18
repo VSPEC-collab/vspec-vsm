@@ -40,8 +40,7 @@ spot = StarSpot(
     is_growing=True,
     growth_rate=0.5/u.day,
     decay_rate=20*MSH/u.day,
-    nlat=500,
-    nlon=100
+    grid_params=1000
 )
 spotlist = SpotCollection(spot)
 

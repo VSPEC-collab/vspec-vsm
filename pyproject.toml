@@ -6,7 +6,7 @@ authors = [
 description = "The VSPEC Variable Star Model as a standalone package."
 readme = "docs/readme.rst"
 
-version = "0.1"
+version = "0.1.0"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 

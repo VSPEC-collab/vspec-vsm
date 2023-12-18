@@ -4,7 +4,7 @@ Test module for VSPEC Granulation model
 import numpy as np
 from tinygp import GaussianProcess
 from astropy import units as u
-from VSPEC.variable_star_model import granules
+from vspec_vsm import granules
 
 def test_GranulationKernel():
     """

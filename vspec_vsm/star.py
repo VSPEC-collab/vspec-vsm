@@ -21,6 +21,7 @@ Herein we refer to this temperature as the photosphere temperature to differenti
 it from the temperature of spots, faculae, or other sources of variability.
 """
 from typing import Tuple, Union
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
@@ -39,6 +40,10 @@ from vspec_vsm.faculae import FaculaCollection, FaculaGenerator, Facula
 from vspec_vsm.flares import FlareCollection, FlareGenerator
 from vspec_vsm.granules import Granulation
 
+class InsufficientResolutionWarning(Warning):
+    """Transit calculated but there is not
+    enough grid resolution to do it accurately.
+    """
 
 class Star:
     """
@@ -447,13 +452,13 @@ class Star:
         eclipse = False
         if np.cos(phase) > 0:
             eclipse = True
-        angle_past_midtransit = phase - 180*u.deg
-        x = (orbit_radius/self.radius * np.sin(angle_past_midtransit)
+        angle_past_midtransit: u.Quantity = phase - 180*u.deg
+        x: float = (orbit_radius/self.radius * np.sin(angle_past_midtransit)
              ).to_value(u.dimensionless_unscaled)
-        y = (orbit_radius/self.radius * np.cos(angle_past_midtransit)
+        y: float = (orbit_radius/self.radius * np.cos(angle_past_midtransit)
              * np.cos(inclination)).to_value(u.dimensionless_unscaled)
-        rad: float = (radius/self.radius).to_value(u.dimensionless_unscaled)
-        if np.sqrt(x**2 + y**2) > 1 + 2*rad:  # no transit
+        rp_rs: float = (radius/self.radius).to_value(u.dimensionless_unscaled)
+        if np.sqrt(x**2 + y**2) > 1 + 2*rp_rs:  # no transit
             return self.gridmaker.zeros().astype('bool'), 1.0
         elif eclipse:
             planet_fraction = self.get_pl_frac(
@@ -463,31 +468,49 @@ class Star:
             llat, llon = self.gridmaker.grid()
             xcoord, ycoord = proj_ortho(lat0, lon0, llat, llon)
             mu = self.gridmaker.cos_angle_from_disk_center(lat0, lon0)
-            area = self.gridmaker.area  # area in units of 4pi steradians
-            point_radii = np.sqrt(area)  # radius of each pixel in radians
+            area = self.gridmaker.area  # area in units of 4pi steradians ie adds to 1
+            point_radii = 2*np.sqrt(area)  # radius of each pixel in radians. The 2
+                                           # comes from the 4 in 4pi steradians
             proj_radii = point_radii*mu  # radius of each pixel in projected coords
             # distances in projected coords
             rad_map = np.sqrt((xcoord-x)**2 + (ycoord-y)**2)
             # case 1: Point is completely outside transit radius
-            case1 = (rad_map > rad + 2*proj_radii) | np.isnan(rad_map)
+            case1 = (rad_map > rp_rs + 2*proj_radii) | np.isnan(rad_map)
 
             covered_value = np.where(~case1, 1, 0).astype('float')
             if np.any(np.isnan(covered_value)):
                 raise ValueError('NaN in covered_value')
             indicies = np.argwhere(~case1)
+            if len(indicies)>0:
+                relevent_radii = proj_radii[~case1]
+                rad_mean = np.mean(relevent_radii)
+                if rad_mean > 0.5*rp_rs:
+                    area_mean = np.pi*rad_mean**2
+                    area_pl = np.pi*rp_rs**2
+                    target_area = area_pl/4
+                    factor = area_mean/target_area
+                    
+                    warnings.warn(
+                        f'Pixel resolution too low. Increase by factor of {factor:.2f}',
+                        InsufficientResolutionWarning
+                    )
+                    
             for index in indicies:
                 s = index if index is int else tuple(index)
                 dist_from_transit_center: float = rad_map[s]
-                gauss_sigma = proj_radii[s]
-                if rad > dist_from_transit_center+2*gauss_sigma:
+                # gauss_sigma = proj_radii[s]
+                sigma_x = point_radii[s]*mu[s]
+                sigma_y = point_radii[s]
+                if rp_rs > dist_from_transit_center+2*sigma_x:
                     covered_value[s] = 1.
                 else:
-                    x = np.linspace(-3*gauss_sigma, 3*gauss_sigma, 100)
+                    x = np.linspace(-3*sigma_x, 3*sigma_x, 100)
                     xx, yy = np.meshgrid(x, x)
-                    zz = 1/(2*np.pi*gauss_sigma**2)*np.exp(-(xx**2 + yy**2)
-                                                           / (2*gauss_sigma**2))
-                    dist = np.sqrt((xx-rad)**2 + (yy)**2)
-                    overlap = np.where(dist < rad, zz, 0)
+                    # zz = 1/(2*np.pi*gauss_sigma**2)*np.exp(-(xx**2 + yy**2)
+                    #                                        / (2*gauss_sigma**2))
+                    zz = 1/(2*np.pi*sigma_x*sigma_y)*np.exp(-0.5*(xx/sigma_x)**2 - 0.5*(yy/sigma_y)**2)
+                    dist = np.sqrt((xx-dist_from_transit_center)**2 + (yy)**2)
+                    overlap = np.where(dist < rp_rs, zz, 0)
                     overlap = np.trapz(overlap, x, axis=1)
                     overlap = np.trapz(overlap, x, axis=0)
                     covered_value[s] = overlap

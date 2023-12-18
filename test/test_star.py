@@ -273,6 +273,34 @@ def test_calc_coverage():
     # assert dat_cov[star.Teff] == pytest.approx(1/rs_rp**2,rel=1e-3), 'Planet occultation incorrect for phase=90.3deg'
     assert pl_frac == 1, 'All of planet must be visible.'
     
+def test_transit_coverage():
+    rp_rs = np.logspace(-2.5,-1,10)
+    Teff = 3000 * u.K
+    radius = 0.15 * u.R_sun
+    period = 10 * u.day
+    spots = SpotCollection()
+    faculae = FaculaCollection()
+    star = Star(Teff, radius, period, spots, faculae,grid_params=1000000)
+    
+    lat0 = 0*u.deg
+    lon0=0*u.deg
+    sub_obs = {'lat':lat0,'lon':lon0}
+    a = 0.05*u.AU
+    phase = 180.*u.deg
+    i = 90*u.deg
+    
+    for r in rp_rs:
+        dat_tot, dat_cov, pl_frac = star.calc_coverage(
+            sub_obs_coords=sub_obs,
+            granulation_fraction=0.0,
+            orbit_radius=a,
+            planet_radius=r*star.radius,
+            phase=phase,
+            inclination=i
+        )
+        assert dat_tot[star.teff] == 1.0, 'Total coverage must be 1.0'
+        assert dat_cov[star.teff] == pytest.approx(r**2,rel=5e-2), f'Planet occultation incorrect for rp/rs = {r}'
+        assert pl_frac == 1, 'All of planet must be visible.'
 
 
 # def test_add_fac_to_map():

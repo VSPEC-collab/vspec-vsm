@@ -23,7 +23,6 @@ it from the temperature of spots, faculae, or other sources of variability.
 from typing import Tuple, Union
 import warnings
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
@@ -660,6 +659,7 @@ class Star:
         """
         Add the transit to the surface map and plot.
         """
+        import matplotlib.pyplot as plt
         import cartopy.crs as ccrs
         from cartopy.mpl.geoaxes import GeoAxes
         proj = ccrs.Orthographic(

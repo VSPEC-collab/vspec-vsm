@@ -10,10 +10,9 @@ import typing as Typing
 import numpy as np
 from astropy import units as u, constants as const
 from astropy.units.quantity import Quantity
-
-from xoflares.xoflares import _flareintegralnp as flareintegral, get_light_curvenp
-
 from VSPEC.params import FlareParameters
+
+from .xoflares import _flareintegralnp as flareintegral, get_light_curvenp
 
 
 

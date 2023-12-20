@@ -26,8 +26,6 @@ import numpy as np
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
-from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
-
 from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.helpers import (
     get_angle_between, proj_ortho,
@@ -166,48 +164,6 @@ class Star:
         self.u2 = u2
         self.set_spot_grid()
         self.set_fac_grid()
-
-    @classmethod
-    def from_params(cls, starparams: StarParameters, rng: np.random.Generator, seed: int):
-        """
-        Create a star from VSPEC parameters.
-
-        Parameters
-        ----------
-        starparams : StarParameters
-            Star parameters from VSPEC.
-        rng : np.random.Generator
-            Random number generator.
-        seed : int
-            Seed for the random number generator.
-        """
-        return cls(
-            radius=starparams.radius,
-            period=starparams.period,
-            teff=starparams.teff,
-            spots=SpotCollection(grid_params=starparams.grid_params),
-            faculae=FaculaCollection(grid_params=starparams.grid_params),
-            grid_params=starparams.grid_params,
-            flare_generator=FlareGenerator.from_params(
-                starparams.flares, rng=rng),
-            spot_generator=SpotGenerator.from_params(
-                spotparams=starparams.spots,
-                grid_params=starparams.grid_params,
-                gridmaker=None,
-                rng=rng
-            ),
-            fac_generator=FaculaGenerator.from_params(
-                facparams=starparams.faculae,
-                grid_params=starparams.grid_params,
-                gridmaker=None,
-                rng=rng
-            ),
-            granulation=Granulation.from_params(granulation_params=starparams.granulation,
-                                                seed=seed),
-            u1=starparams.ld.u1,
-            u2=starparams.ld.u2,
-            rng=rng
-        )
 
     def set_spot_grid(self):
         """

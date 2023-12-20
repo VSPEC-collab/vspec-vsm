@@ -13,11 +13,8 @@ import numpy as np
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
-from VSPEC.params import SpotParameters
-
 from vspec_vsm.coordinate_grid import CoordinateGrid
-from vspec_vsm.config import MSH, starspot_initial_area
-from vspec_vsm import config
+from vspec_vsm.config import MSH
 
 
 class StarSpot:

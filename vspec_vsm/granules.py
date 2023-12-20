@@ -10,8 +10,6 @@ from tinygp import kernels, GaussianProcess
 from astropy import units as u
 import numpy as np
 
-from VSPEC.params import GranulationParameters
-
 time_unit = u.hr
 
 
@@ -121,23 +119,6 @@ class Granulation:
         )
         self.dteff = dteff
         self.seed = seed
-    @classmethod
-    def from_params(cls,granulation_params:GranulationParameters,seed:int):
-        """
-        Create an instance of ``Granulation`` from ``GranulationParameters``.
-
-        Parameters
-        ----------
-        granulation_params : GranulationParameters
-            The parameters to construct from.
-        """
-        return cls(
-            mean_coverage=granulation_params.mean,
-            amplitude=granulation_params.amp,
-            period=granulation_params.period,
-            dteff=granulation_params.dteff,
-            seed=seed
-        )
     def _build_gp(self, X: np.ndarray) -> GaussianProcess:
         return build_gp(self.params, X)
 

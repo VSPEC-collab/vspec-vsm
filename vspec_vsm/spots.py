@@ -345,7 +345,7 @@ class SpotCollection:
     gridmaker : CoordinateGrid object
         `CoordinateGrid` object used to calculate the grid of the stellar surface.
     """
-
+    gridmaker: CoordinateGrid = None
     def __init__(
         self,
         *spots: StarSpot,
@@ -354,9 +354,18 @@ class SpotCollection:
     ):
         self.spots = spots
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid.new(grid_params)
-        else:
-            self.gridmaker = gridmaker
+            gridmaker = CoordinateGrid.new(grid_params)
+        self.set_gridmaker(gridmaker)
+    def set_gridmaker(self, gridmaker: CoordinateGrid):
+        """
+        Set the `gridmaker` attribute safely.
+
+        Parameters
+        ----------
+        gridmaker : VSPEC.helpers.CoordinateGrid
+            The `CoordinateGrid` object to set
+        """
+        self.gridmaker = gridmaker
         for spot in self.spots:
             spot.set_gridmaker(self.gridmaker)
 

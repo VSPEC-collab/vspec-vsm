@@ -395,20 +395,28 @@ class FaculaCollection:
     gridmaker : CoordinateGrid, default=None
         A `CoordinateGrid` object to create the stellar sufrace grid.
     """
-
+    gridmaker: CoordinateGrid = None
     def __init__(self, *faculae: Tuple[Facula],
                  grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
                  gridmaker: CoordinateGrid = None):
         self.faculae: Tuple[Facula] = tuple(faculae)
 
         if gridmaker is None:
-            self.gridmaker = CoordinateGrid.new(grid_params)
-        else:
-            self.gridmaker = gridmaker
-        for facula in faculae:
+            gridmaker = CoordinateGrid.new(grid_params)
+        self.set_gridmaker(gridmaker)
+    def set_gridmaker(self, gridmaker: CoordinateGrid):
+        """
+        Set the `gridmaker` attribute safely.
+
+        Parameters
+        ----------
+        gridmaker : VSPEC.helpers.CoordinateGrid
+            The `CoordinateGrid` object to set
+        """
+        self.gridmaker = gridmaker
+        for facula in self.faculae:
             facula: Facula
-            if not facula.gridmaker == self.gridmaker:
-                facula.gridmaker = self.gridmaker
+            facula.gridmaker = self.gridmaker
 
     def add_faculae(self, facula: Tuple[Facula] or Facula) -> None:
         """

@@ -32,7 +32,7 @@ def star_with_spots():
     sgen = SpotGenerator(500*MSH,0.2,2700*u.K,2600*u.K)
     spots = SpotCollection(*sgen.birth_spots(10*u.day,radius))
     return Star(Teff, radius, period, spots, faculae,
-                spot_generator=sgen)
+                spot_generator=sgen,grid_params=1000)
 @pytest.fixture
 def star_with_spots_and_fac():
     # Create an instance of the Star class for testing
@@ -112,7 +112,8 @@ def test_star_with_custom_gridmaker():
 
 def test_age_method_updates_pixelmap(star_with_spots:Star):
     # Store the initial pixelmap
-    initial_pixelmap = star_with_spots.map.copy()
+    initial_pixelmap = star_with_spots.map
+    
 
     # Age the spots and faculae
     time = 4 * u.day

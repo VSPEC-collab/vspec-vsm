@@ -122,14 +122,14 @@ class Star:
         self.teff = teff
         self.radius = radius
         self.period = period
-        self.spots = spots
-        self.faculae = faculae
+        self.spots:SpotCollection = spots
+        self.faculae:FaculaCollection = faculae
         self.rng = rng
         self.gridmaker = CoordinateGrid.new(grid_params)
         self.grid_params = grid_params
         
-        self.faculae.gridmaker = self.gridmaker
-        self.spots.gridmaker = self.gridmaker
+        self.faculae.set_gridmaker(self.gridmaker)
+        self.spots.set_gridmaker(self.gridmaker)
 
         if flare_generator is None:
             self.flare_generator = FlareGenerator.off(
@@ -147,6 +147,12 @@ class Star:
             )
         else:
             self.spot_generator = spot_generator
+            try:
+                if self.spot_generator.gridmaker != self.gridmaker:
+                    self.spot_generator.gridmaker = self.gridmaker
+            except TypeError:
+                self.spot_generator.gridmaker = self.gridmaker
+            
 
         if fac_generator is None:
             self.fac_generator = FaculaGenerator.off(
@@ -156,6 +162,11 @@ class Star:
             )
         else:
             self.fac_generator = fac_generator
+            try:
+                if self.fac_generator.gridmaker != self.gridmaker:
+                    self.fac_generator.gridmaker = self.gridmaker
+            except TypeError:
+                self.fac_generator.gridmaker = self.gridmaker
         if granulation is None:
             self.granulation = Granulation.off(seed=0)
         else:

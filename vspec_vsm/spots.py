@@ -590,49 +590,6 @@ class SpotGenerator:
             self.gridmaker = gridmaker
         self.rng = rng
 
-    @classmethod
-    def from_params(
-        cls,
-        spotparams: SpotParameters,
-        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
-        gridmaker: CoordinateGrid = None,
-        rng: np.random.Generator = np.random.default_rng()
-    ):
-        """
-        Construct a ``SpotGenerator`` object from a ``SpotParameters`` object.
-
-        Parameters
-        ----------
-        spotparams : SpotParameters
-            The parameters to build the instance from.
-        nlat : int, default=VSPEC.config.nlat
-            The number of latitude points. Default defined in `VSPEC.config`.
-        nlon : int, default=VSPEC.config.nlon
-            The number of longitude points. Default defined in `VSPEC.config`.
-        gridmaker : CoordinateGrid, default=None
-            The ``CoordianteGrid`` object to create the surface array.
-        rng : numpy.random.Generator, default=np.random.default_rng()
-            The random number generator to use.
-
-        Notes
-        -----
-        ``init_area`` is set to ``VSPEC.config.starspot_initial_area``.
-        """
-        return cls(
-            dist_area_mean=spotparams.area_mean,
-            dist_area_logsigma=spotparams.area_logsigma,
-            umbra_teff=spotparams.teff_umbra,
-            penumbra_teff=spotparams.teff_penumbra,
-            growth_rate=spotparams.growth_rate,
-            decay_rate=spotparams.decay_rate,
-            init_area=starspot_initial_area,
-            distribution=spotparams.distribution,
-            coverage=spotparams.equillibrium_coverage,
-            grid_params=grid_params,
-            gridmaker=gridmaker,
-            rng=rng
-        )
-
     @property
     def is_static(self) -> bool:
         """

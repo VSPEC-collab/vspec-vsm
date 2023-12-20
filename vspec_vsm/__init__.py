@@ -2,7 +2,7 @@
 Most of the interface is defined in by the ``Star`` class.
 """
 
-__verion__ = '0.3.0'
+__verion__ = "0.3.0"
 
 from vspec_vsm.star import Star
 from vspec_vsm.spots import SpotCollection, StarSpot, SpotGenerator

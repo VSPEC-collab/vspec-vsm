@@ -612,7 +612,7 @@ class Star:
         self,
         lat0: u.Quantity,
         lon0: u.Quantity,
-        ax: 'GeoAxes' = None,
+        ax = None,
         orbit_radius: u.Quantity = 1*u.AU,
         radius: u.Quantity = 1*u.R_earth,
         phase: u.Quantity = 90*u.deg,
@@ -626,6 +626,7 @@ class Star:
         import matplotlib.pyplot as plt
         import cartopy.crs as ccrs
         from cartopy.mpl.geoaxes import GeoAxes
+        ax: GeoAxes
         proj = ccrs.Orthographic(
             central_latitude=lat0.to_value(u.deg),
             central_longitude=lon0.to_value(u.deg)

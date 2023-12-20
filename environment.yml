@@ -1,1 +1,4 @@
 name: vspec-vsm
+dependencies:
+  - pip:
+    - .

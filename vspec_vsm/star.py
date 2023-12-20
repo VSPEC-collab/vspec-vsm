@@ -26,8 +26,6 @@ import numpy as np
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
-from VSPEC.params import FaculaParameters, SpotParameters, FlareParameters, StarParameters
-
 from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.helpers import (
     get_angle_between, proj_ortho,
@@ -112,7 +110,7 @@ class Star:
                  period: u.Quantity,
                  spots: SpotCollection,
                  faculae: FaculaCollection,
-                 grid_params: Union[int,Tuple[int, int]] = (500, 1000),
+                 grid_params: Union[int,Tuple[int, int]] = 1000,
                  flare_generator: FlareGenerator = None,
                  spot_generator: SpotGenerator = None,
                  fac_generator: FaculaGenerator = None,
@@ -134,8 +132,7 @@ class Star:
         self.spots.gridmaker = self.gridmaker
 
         if flare_generator is None:
-            self.flare_generator = FlareGenerator.from_params(
-                flareparams=FlareParameters.none(),
+            self.flare_generator = FlareGenerator.off(
                 rng=self.rng
             )
         else:
@@ -143,8 +140,7 @@ class Star:
         self.flares = None
 
         if spot_generator is None:
-            self.spot_generator = SpotGenerator.from_params(
-                spotparams=SpotParameters.none(),
+            self.spot_generator = SpotGenerator.off(
                 grid_params=grid_params,
                 gridmaker=self.gridmaker,
                 rng=self.rng
@@ -153,8 +149,7 @@ class Star:
             self.spot_generator = spot_generator
 
         if fac_generator is None:
-            self.fac_generator = FaculaGenerator.from_params(
-                facparams=FaculaParameters.none(),
+            self.fac_generator = FaculaGenerator.off(
                 grid_params=grid_params,
                 gridmaker=self.gridmaker,
                 rng=self.rng
@@ -162,55 +157,13 @@ class Star:
         else:
             self.fac_generator = fac_generator
         if granulation is None:
-            self.granulation = Granulation(0, 0, 1*u.day, 0*u.K)
+            self.granulation = Granulation.off(seed=0)
         else:
             self.granulation = granulation
         self.u1 = u1
         self.u2 = u2
         self.set_spot_grid()
         self.set_fac_grid()
-
-    @classmethod
-    def from_params(cls, starparams: StarParameters, rng: np.random.Generator, seed: int):
-        """
-        Create a star from VSPEC parameters.
-
-        Parameters
-        ----------
-        starparams : StarParameters
-            Star parameters from VSPEC.
-        rng : np.random.Generator
-            Random number generator.
-        seed : int
-            Seed for the random number generator.
-        """
-        return cls(
-            radius=starparams.radius,
-            period=starparams.period,
-            teff=starparams.teff,
-            spots=SpotCollection(grid_params=starparams.grid_params),
-            faculae=FaculaCollection(grid_params=starparams.grid_params),
-            grid_params=starparams.grid_params,
-            flare_generator=FlareGenerator.from_params(
-                starparams.flares, rng=rng),
-            spot_generator=SpotGenerator.from_params(
-                spotparams=starparams.spots,
-                grid_params=starparams.grid_params,
-                gridmaker=None,
-                rng=rng
-            ),
-            fac_generator=FaculaGenerator.from_params(
-                facparams=starparams.faculae,
-                grid_params=starparams.grid_params,
-                gridmaker=None,
-                rng=rng
-            ),
-            granulation=Granulation.from_params(granulation_params=starparams.granulation,
-                                                seed=seed),
-            u1=starparams.ld.u1,
-            u2=starparams.ld.u2,
-            rng=rng
-        )
 
     def set_spot_grid(self):
         """

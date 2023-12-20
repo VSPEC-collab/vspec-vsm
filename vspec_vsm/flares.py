@@ -10,7 +10,6 @@ import typing as Typing
 import numpy as np
 from astropy import units as u, constants as const
 from astropy.units.quantity import Quantity
-from VSPEC.params import FlareParameters
 
 from .xoflares import _flareintegralnp as flareintegral, get_light_curvenp
 
@@ -236,28 +235,28 @@ class FlareGenerator:
         self.alpha = alpha
         self.beta = beta
         self.rng = rng
-
     @classmethod
-    def from_params(cls, flareparams: FlareParameters, rng: np.random.Generator):
+    def off(
+        cls,
+        rng: np.random.Generator = np.random.default_rng()
+    ):
         """
-        Load a ``FlareGenerator`` from a ``FlareParameters`` instance.
-
+        An instance that does not generate anything.
+        
         Parameters
         ----------
-        flareparams : FlareParameters
-            The object to load from.
         rng : numpy.random.Generator
             The random number generator to use.
         """
         return cls(
-            dist_teff_mean=flareparams.dist_teff_mean,
-            dist_teff_sigma=flareparams.dist_teff_sigma,
-            dist_fwhm_mean=flareparams.dist_fwhm_mean,
-            dist_fwhm_logsigma=flareparams.dist_fwhm_logsigma,
-            alpha=flareparams.alpha,
-            beta=flareparams.beta,
-            min_energy=flareparams.min_energy,
-            cluster_size=flareparams.cluster_size,
+            dist_teff_mean=0*u.K,
+            dist_teff_sigma=0*u.K,
+            dist_fwhm_mean=0*u.erg,
+            dist_fwhm_logsigma=0,
+            alpha=-0.829,
+            beta=26.87,
+            min_energy=np.inf*u.erg,
+            cluster_size=2,
             rng=rng
         )
 

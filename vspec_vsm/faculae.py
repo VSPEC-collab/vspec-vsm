@@ -23,8 +23,6 @@ import numpy as np
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
-from VSPEC.params import FaculaParameters
-
 from vspec_vsm.coordinate_grid import CoordinateGrid
 from vspec_vsm.helpers import round_teff
 from vspec_vsm import config
@@ -616,49 +614,44 @@ class FaculaGenerator:
             self.gridmaker = gridmaker
         self.grid_params = grid_params
         self.rng = rng
-
     @classmethod
-    def from_params(
+    def off(
         cls,
-        facparams: FaculaParameters,
-        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
+        grid_params: Union[int, Tuple[int, int]] = 1000,
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
         """
-        Construct an instance from a ``FaculaParameters`` object.
-
+        An instance that does not generate any faculae.
+        
         Parameters
         ----------
-        facparams : FaculaParameters
-            The set of parameters to construct from.
-        nlat : int, default=VSPEC.config.nlat
-            The number of latitude points on the stellar sufrace.
-        nlon : int, default=VSPEC.config.nlon
-            The number of longitude points on the stellar surface.
-        gridmaker : CoordinateGrid, default=None
-            A `CoordinateGrid` object to create the stellar sufrace grid.
-        rng : numpy.random.Genrator, default=numpy.random.default_rng()
+        grid_params : int or tuple
+            The number of latitude and longitude points on the stellar surface.
+        gridmaker : CoordinateGrid
+            A `CoordinateGrid` object to create the stellar surface grid.
+        rng : numpy.random.generator
             The random number generator to use.
         """
         return cls(
-            dist_r_peak=facparams.mean_radius,
-            dist_r_logsigma=facparams.logsigma_radius,
-            depth=facparams.depth,
-            dist_life_peak=facparams.mean_timescale,
-            dist_life_logsigma=facparams.logsigma_timescale,
-            floor_teff_slope=facparams.floor_teff_slope,
-            floor_teff_min_rad=facparams.floor_teff_min_rad,
-            floor_teff_base_dteff=facparams.floor_teff_base_dteff,
-            wall_teff_slope=facparams.wall_teff_slope,
-            wall_teff_intercept=facparams.wall_teff_intercept,
-            coverage=facparams.equillibrium_coverage,
-            dist=facparams.distribution,
+            dist_r_peak=100*u.km,
+            dist_r_logsigma=0.1,
+            depth=10*u.km,
+            dist_life_peak=6*u.hr,
+            dist_life_logsigma=0.2,
+            floor_teff_slope=0*u.K/u.km,
+            floor_teff_min_rad=20*u.km,
+            floor_teff_base_dteff=-100*u.K,
+            wall_teff_slope=0*u.K/u.km,
+            wall_teff_intercept=100*u.K,
+            coverage=0.0,
+            dist='iso',
             grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
-
+    
+    
     @property
     def mean_area(self):
         """

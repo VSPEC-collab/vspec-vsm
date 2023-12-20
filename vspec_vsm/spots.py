@@ -13,11 +13,8 @@ import numpy as np
 from astropy import units as u
 from astropy.units.quantity import Quantity
 
-from VSPEC.params import SpotParameters
-
 from vspec_vsm.coordinate_grid import CoordinateGrid
-from vspec_vsm.config import MSH, starspot_initial_area
-from vspec_vsm import config
+from vspec_vsm.config import MSH
 
 
 class StarSpot:
@@ -589,49 +586,40 @@ class SpotGenerator:
         else:
             self.gridmaker = gridmaker
         self.rng = rng
-
     @classmethod
-    def from_params(
+    def off(
         cls,
-        spotparams: SpotParameters,
-        grid_params: Union[int,Tuple[int, int]] = (config.NLAT, config.NLON),
+        grid_params: Union[int, Tuple[int, int]] = 1000,
         gridmaker: CoordinateGrid = None,
         rng: np.random.Generator = np.random.default_rng()
     ):
         """
-        Construct a ``SpotGenerator`` object from a ``SpotParameters`` object.
-
+        Create an instance that does not generate anything.
+        
         Parameters
         ----------
-        spotparams : SpotParameters
-            The parameters to build the instance from.
-        nlat : int, default=VSPEC.config.nlat
-            The number of latitude points. Default defined in `VSPEC.config`.
-        nlon : int, default=VSPEC.config.nlon
-            The number of longitude points. Default defined in `VSPEC.config`.
-        gridmaker : CoordinateGrid, default=None
-            The ``CoordianteGrid`` object to create the surface array.
-        rng : numpy.random.Generator, default=np.random.default_rng()
+        grid_params : int or tuple
+            The number of latitude and longitude points on the stellar surface.
+        gridmaker : CoordinateGrid
+            A `CoordinateGrid` object to create the stellar surface grid.
+        rng : numpy.random.generator
             The random number generator to use.
-
-        Notes
-        -----
-        ``init_area`` is set to ``VSPEC.config.starspot_initial_area``.
         """
         return cls(
-            dist_area_mean=spotparams.area_mean,
-            dist_area_logsigma=spotparams.area_logsigma,
-            umbra_teff=spotparams.teff_umbra,
-            penumbra_teff=spotparams.teff_penumbra,
-            growth_rate=spotparams.growth_rate,
-            decay_rate=spotparams.decay_rate,
-            init_area=starspot_initial_area,
-            distribution=spotparams.distribution,
-            coverage=spotparams.equillibrium_coverage,
+            dist_area_mean=10*MSH,
+            dist_area_logsigma=1,
+            umbra_teff=0*u.K,
+            penumbra_teff=0*u.K,
+            growth_rate=0*u.day,
+            decay_rate=0*MSH/u.day,
+            init_area=10*MSH,
+            distribution='iso',
+            coverage=0,
             grid_params=grid_params,
             gridmaker=gridmaker,
             rng=rng
         )
+        
 
     @property
     def is_static(self) -> bool:

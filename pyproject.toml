@@ -1,5 +1,9 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.
+
 [project]
-dynamic = ["version"]
+version = "0.3.0"
 name = "vspec-vsm"
 authors = [
     {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
@@ -38,13 +42,13 @@ plot = [
 dev = [
     "pytest",
     "pep8",
-    "furo=2023.9.10",
+    "furo==2023.9.10",
     "numpydoc",
     "sphinx",
     "sphinx-automodapi",
     "sphinx-gallery",
     "sphinxcontrib-bibtex",
-    "sphinxcontrib-napoleon",
+    "sphinxcontrib-napoleon"
 ]
 
 [project.urls]

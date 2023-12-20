@@ -235,6 +235,30 @@ class FlareGenerator:
         self.alpha = alpha
         self.beta = beta
         self.rng = rng
+    @classmethod
+    def off(
+        cls,
+        rng: np.random.Generator = np.random.default_rng()
+    ):
+        """
+        An instance that does not generate anything.
+        
+        Parameters
+        ----------
+        rng : numpy.random.Generator
+            The random number generator to use.
+        """
+        return cls(
+            dist_teff_mean=0*u.K,
+            dist_teff_sigma=0*u.K,
+            dist_fwhm_mean=0*u.erg,
+            dist_fwhm_logsigma=0,
+            alpha=-0.829,
+            beta=26.87,
+            min_energy=np.inf*u.erg,
+            cluster_size=2,
+            rng=rng
+        )
 
     def frequency_greater_than(self, energy: u.Quantity):
         """

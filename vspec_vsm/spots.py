@@ -586,6 +586,40 @@ class SpotGenerator:
         else:
             self.gridmaker = gridmaker
         self.rng = rng
+    @classmethod
+    def off(
+        cls,
+        grid_params: Union[int, Tuple[int, int]] = 1000,
+        gridmaker: CoordinateGrid = None,
+        rng: np.random.Generator = np.random.default_rng()
+    ):
+        """
+        Create an instance that does not generate anything.
+        
+        Parameters
+        ----------
+        grid_params : int or tuple
+            The number of latitude and longitude points on the stellar surface.
+        gridmaker : CoordinateGrid
+            A `CoordinateGrid` object to create the stellar surface grid.
+        rng : numpy.random.generator
+            The random number generator to use.
+        """
+        return cls(
+            dist_area_mean=10*MSH,
+            dist_area_logsigma=1,
+            umbra_teff=0*u.K,
+            penumbra_teff=0*u.K,
+            growth_rate=0*u.day,
+            decay_rate=0*MSH/u.day,
+            init_area=10*MSH,
+            distribution='iso',
+            coverage=0,
+            grid_params=grid_params,
+            gridmaker=gridmaker,
+            rng=rng
+        )
+        
 
     @property
     def is_static(self) -> bool:

@@ -119,6 +119,27 @@ class Granulation:
         )
         self.dteff = dteff
         self.seed = seed
+    @classmethod
+    def off(
+        cls,
+        seed:int = 0
+    ):
+        """
+        An instance that does not generate any granulation
+        
+        Parameters
+        ----------
+        seed : int
+            Seed for the random number generator.
+        """
+        return cls(
+            mean_coverage=0,
+            amplitude=0,
+            period=0*u.hr,
+            dteff=0*u.K,
+            seed=seed
+        )
+    
     def _build_gp(self, X: np.ndarray) -> GaussianProcess:
         return build_gp(self.params, X)
 

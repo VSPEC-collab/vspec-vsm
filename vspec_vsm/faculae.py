@@ -614,7 +614,44 @@ class FaculaGenerator:
             self.gridmaker = gridmaker
         self.grid_params = grid_params
         self.rng = rng
-
+    @classmethod
+    def off(
+        cls,
+        grid_params: Union[int, Tuple[int, int]] = 1000,
+        gridmaker: CoordinateGrid = None,
+        rng: np.random.Generator = np.random.default_rng()
+    ):
+        """
+        An instance that does not generate any faculae.
+        
+        Parameters
+        ----------
+        grid_params : int or tuple
+            The number of latitude and longitude points on the stellar surface.
+        gridmaker : CoordinateGrid
+            A `CoordinateGrid` object to create the stellar surface grid.
+        rng : numpy.random.generator
+            The random number generator to use.
+        """
+        return cls(
+            dist_r_peak=100*u.km,
+            dist_r_logsigma=0.1,
+            depth=10*u.km,
+            dist_life_peak=6*u.hr,
+            dist_life_logsigma=0.2,
+            floor_teff_slope=0*u.K/u.km,
+            floor_teff_min_rad=20*u.km,
+            floor_teff_base_dteff=-100*u.K,
+            wall_teff_slope=0*u.K/u.km,
+            wall_teff_intercept=100*u.K,
+            coverage=0.0,
+            dist='iso',
+            grid_params=grid_params,
+            gridmaker=gridmaker,
+            rng=rng
+        )
+    
+    
     @property
     def mean_area(self):
         """

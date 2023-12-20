@@ -112,11 +112,11 @@ class Star:
                  period: u.Quantity,
                  spots: SpotCollection,
                  faculae: FaculaCollection,
-                 flare_generator: FlareGenerator,
-                 spot_generator: SpotGenerator,
-                 fac_generator: FaculaGenerator,
-                 granulation: Granulation = None,
                  grid_params: Union[int,Tuple[int, int]] = 1000,
+                 flare_generator: FlareGenerator = None,
+                 spot_generator: SpotGenerator = None,
+                 fac_generator: FaculaGenerator = None,
+                 granulation: Granulation = None,
                  u1: float = 0,
                  u2: float = 0,
                  rng: np.random.Generator = np.random.default_rng()
@@ -129,14 +129,39 @@ class Star:
         self.rng = rng
         self.gridmaker = CoordinateGrid.new(grid_params)
         self.grid_params = grid_params
+        
         self.faculae.gridmaker = self.gridmaker
         self.spots.gridmaker = self.gridmaker
-        
-        self.flare_generator = flare_generator
+
+        if flare_generator is None:
+            self.flare_generator = FlareGenerator.off(
+                rng=self.rng
+            )
+        else:
+            self.flare_generator = flare_generator
         self.flares = None
-        self.spot_generator = spot_generator
-        self.fac_generator = fac_generator
-        self.granulation = granulation
+
+        if spot_generator is None:
+            self.spot_generator = SpotGenerator.off(
+                grid_params=grid_params,
+                gridmaker=self.gridmaker,
+                rng=self.rng
+            )
+        else:
+            self.spot_generator = spot_generator
+
+        if fac_generator is None:
+            self.fac_generator = FaculaGenerator.off(
+                grid_params=grid_params,
+                gridmaker=self.gridmaker,
+                rng=self.rng
+            )
+        else:
+            self.fac_generator = fac_generator
+        if granulation is None:
+            self.granulation = Granulation.off(seed=0)
+        else:
+            self.granulation = granulation
         self.u1 = u1
         self.u2 = u2
         self.set_spot_grid()

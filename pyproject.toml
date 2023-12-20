@@ -1,12 +1,56 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.
+
 [project]
+version = "0.3.0"
 name = "vspec-vsm"
 authors = [
     {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
+    { name = "Cameron Kelahan", email = "cameron.kelahan@gmail.com"}
 ]
+maintainers = [ { name = "Ted Johnson", email = "ted.johnson@unlv.edu" } ]
 description = "The VSPEC Variable Star Model as a standalone package."
 readme = "docs/readme.rst"
+license = {file = "LICENSE"}
+keywords =  ["astronomy", "star"]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "astropy",
+    "numpy",
+    "jax",
+    "tinygp",
 
-version = "0.1.0"
-requires-python = ">=3.8"
-license = {text = "MIT"}
+]
 
+[project.optional-dependencies]
+plot = [
+    "matplotlib",
+    "cartopy"
+]
+dev = [
+    "pytest",
+    "pep8",
+    "furo==2023.9.10",
+    "numpydoc",
+    "sphinx",
+    "sphinx-automodapi",
+    "sphinx-gallery",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-napoleon"
+]
+
+[project.urls]
+Repository = "https://github.com/VSPEC-collab/vspec-vsm"
+Issues = "https://github.com/VSPEC-collab/vspec-vsm/issues"

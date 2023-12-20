@@ -372,7 +372,6 @@ def test_spot_generator_generate_spots():
         assert spot.area_current == 10*MSH
 
 
-@pytest.mark.skip  # Generator need to be refactored # Why? -Ted on 2023-11-09
 def test_spot_generator_generate_mature_spots():
     """
     Test `SpotGenerator.generate_mature_spots()`

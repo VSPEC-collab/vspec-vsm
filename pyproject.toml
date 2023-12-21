@@ -31,25 +31,25 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.9"
 astropy = ">=5.1.1"
-numpy
-jax
-jaxlib
-tinygp
+numpy = "*"
+jax = "*"
+jaxlib = "*"
+tinygp = "*"
 
 [tool.poetry.group.dev.dependencies]
-pytest
+pytest = "*"
 
 [tool.poetry.group.docs.dependencies]
-furo
-numpydoc
-sphinx
-sphinx-automodapi
-sphinx-gallery
-sphinxcontrib-bibtex
+furo = "*"
+numpydoc = "*"
+sphinx = "*"
+sphinx-automodapi = "*"
+sphinx-gallery = "*"
+sphinxcontrib-bibtex = "*"
 
 [tool.poetry.group.plot.dependencies]
-matplotlib
-cartopy
+matplotlib = "*"
+cartopy = "*"
 
 [tool.poetry-version-plugin]
 source = "init"

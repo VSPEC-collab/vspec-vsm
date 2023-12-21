@@ -1,20 +1,20 @@
-[build-system]
-# Minimum requirements for the build system to execute.
-requires = ["setuptools", "wheel"]  # PEP 508 specifications.
-
-[project]
-version = "0.3.0"
+[tool.poetry]
 name = "vspec-vsm"
-authors = [
-    {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
-    { name = "Cameron Kelahan", email = "cameron.kelahan@gmail.com"}
-]
-maintainers = [ { name = "Ted Johnson", email = "ted.johnson@unlv.edu" } ]
+version = "0"
 description = "The VSPEC Variable Star Model as a standalone package."
+authors = [
+    "Ted Johnson <ted.johnson@unlv.edu>",
+    "Cameron Kelahan <cameron.kelahan@gmail.com>"
+]
+maintainers = [
+    "Ted Johnson <ted.johnson@unlv.edu>"
+]
+license = "MIT"
 readme = "docs/readme.rst"
-license = {file = "LICENSE"}
-keywords =  ["astronomy", "star"]
-requires-python = ">=3.9"
+homepage = "https://vspec-vsm.readthedocs.io/en/latest/index.html#"
+repository = "https://github.com/VSPEC-collab/vspec-vsm"
+documentation = "https://vspec-vsm.readthedocs.io/en/latest/api.html"
+keywords = ["astronomy", "exoplanet"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -26,32 +26,36 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "astropy",
-    "numpy",
-    "jax",
-    "tinygp",
 
-]
 
-[project.optional-dependencies]
-plot = [
-    "matplotlib",
-    "cartopy"
-]
-dev = [
-    "pytest",
-    "pep8",
-    "furo==2023.9.10",
-    "numpydoc",
-    "sphinx",
-    "sphinx-automodapi",
-    "sphinx-gallery",
-    "sphinxcontrib-bibtex",
-    "sphinxcontrib-napoleon",
-    "sphinxcontrib-bibtex",
-]
+[tool.poetry.dependencies]
+python = "^3.11"
+astropy = "^6.0.0"
+numpy = "^1.26.2"
+jax = "^0.4.23"
+jaxlib = "^0.4.23"
+tinygp = "^0.2.4"
+importlib-metadata = {version = "^1.0", python = "<3.8"}
 
-[project.urls]
-Repository = "https://github.com/VSPEC-collab/vspec-vsm"
-Issues = "https://github.com/VSPEC-collab/vspec-vsm/issues"
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+
+[tool.poetry.group.docs.dependencies]
+furo = "2023.9.10"
+numpydoc = "^1.6.0"
+sphinx = "^7.2.6"
+sphinx-automodapi = "^0.16.0"
+sphinx-gallery = "^0.14.0"
+sphinxcontrib-bibtex = "^2.6.1"
+
+[tool.poetry.group.plot.dependencies]
+matplotlib = "^3.8.0"
+cartopy = "^0.22.0"
+
+[tool.poetry-version-plugin]
+source = "init"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

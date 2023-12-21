@@ -3,7 +3,7 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "miniforge-23.3.1-1"
+    python: "miniconda3-4.7"
 
 conda:
   environment: environment-rtd.yml

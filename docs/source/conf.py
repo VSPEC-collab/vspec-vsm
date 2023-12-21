@@ -9,7 +9,7 @@
 project = 'VSPEC-VSM'
 copyright = '2023, The VSPEC Collaboration'
 author = 'The VSPEC Collaboration'
-release = '0.1.0'
+release = '0.3.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -20,7 +20,10 @@ extensions = [
     'sphinx_automodapi.smart_resolver',
     'numpydoc',
     'sphinx.ext.intersphinx',
-    'sphinx_gallery.gen_gallery'
+    'sphinx_gallery.gen_gallery',
+    'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
+    'sphinx.ext.todo',
 ]
 
 sphinx_gallery_conf = {
@@ -52,6 +55,14 @@ intersphinx_mapping = {
 
 templates_path = ['_templates']
 exclude_patterns = []
+
+numpydoc_class_members_toctree = False
+todo_include_todos = True
+
+bibtex_bibfiles = ['refs.bib']
+bibtex_reference_style = 'author_year'
+
+bibtex_default_style = 'unsrt'
 
 
 

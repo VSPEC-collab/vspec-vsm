@@ -8,12 +8,8 @@ each temperature visible to the observer, accounting for the
 spherical geometry, limb darkening, and any occultation
 by a transiting planet.
 
-Once the surface coverage is calculated, a composite spectrum
-is computed from a grid of PHOENIX stellar spectra :cite:p:`2013A&A...553A...6H`.
-As of ``VSPEC 0.1``, we have spectra between 2300 K and 3900 K, with steps of
-100 K. Each spectrum has :math:`\\log{g} = 5.0` and solar metalicity.
-The raw spectra span from 0.1 to 20 um with 5e-6 um steps, however binned
-versions are available for faster runtimes.
+Once the surface coverage is calculated, the fractions of each component are
+passed allong to VSPEC to compute the spectrum.
 
 The attributes of the ``Star`` class describe the bulk properties of the star,
 including radius, period, and the effective temperature of quiet photosphere.

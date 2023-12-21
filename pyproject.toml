@@ -48,7 +48,8 @@ dev = [
     "sphinx-automodapi",
     "sphinx-gallery",
     "sphinxcontrib-bibtex",
-    "sphinxcontrib-napoleon"
+    "sphinxcontrib-napoleon",
+    "sphinxcontrib-bibtex",
 ]
 
 [project.urls]

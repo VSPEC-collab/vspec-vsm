@@ -54,6 +54,29 @@ class CoordinateGrid:
             'Attempted to call abstract method _grid() from base class')
     @staticmethod
     def new(grid_params: Union[int,Tuple[int, int]]):
+        """
+        Create an instance of a coordinate grid subclass
+        from a set of parameters.
+        
+        Parameters
+        ----------
+        grid_params : int or tuple
+            If a tuple, the first element is the number of latitude
+            points and the second is the number of longitude points.
+            If an int, it is the total number of points.
+        
+        Returns
+        -------
+        grid : SpiralGrid or RectangularGrid
+            An instance of a coordinate grid subclass. If grid_params
+            is a tuple, the ``grid`` is a ``RectangularGrid``. If
+            ``grid_params`` is an int, the ``grid`` is a ``SpiralGrid``.
+        
+        Raises
+        ------
+        TypeError
+            If grid_params is not an int or a tuple.
+        """
         if isinstance(grid_params, int):
             return SpiralGrid(grid_params)
         elif isinstance(grid_params, tuple):
@@ -98,6 +121,7 @@ class CoordinateGrid:
         Notes
         -----
         Recall
+        
         .. math::
 
             \\mu = \\cos{x}

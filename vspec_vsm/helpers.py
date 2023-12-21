@@ -1,10 +1,10 @@
 """
 Miscalaneous helper functions
 """
-
+import warnings
 import astropy.units as u
 import numpy as np
-import warnings
+
 
 from vspec_vsm import config
 
@@ -295,7 +295,12 @@ def clip_teff(teff: u.Quantity):
     -------
     astropy.units.Quantity
         The clipped effective temperature.
+    
+    .. deprecated:: 1.0
     """
+    msg = 'Effective temperature clipping to match a grid should be done by the grid itself.'
+    msg += ' This functionality will be removed in `vspec_vsm` 1.0.'
+    warnings.warn(msg, DeprecationWarning)
     low, high = config.grid_teff_bounds
     if teff > high:
         warnings.warn(

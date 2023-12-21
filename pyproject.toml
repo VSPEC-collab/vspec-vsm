@@ -30,7 +30,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-astropy
+astropy = ">=5.1.1
 numpy
 jax
 jaxlib

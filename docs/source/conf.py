@@ -11,7 +11,10 @@ import vspec_vsm
 project = 'VSPEC-VSM'
 copyright = '2023, The VSPEC Collaboration'
 author = 'The VSPEC Collaboration'
-release = vspec_vsm.__version__
+try:
+    release = vspec_vsm.__version__
+except ImportError:
+    release = open('/tmp/vsm_version.txt').read().strip()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -6,15 +6,7 @@ build:
     python: "3.12"
 
 conda:
-  environment:
-    name: vspec-vsm
-    channels:
-      - conda-forge
-      - defaults
-    dependencies:
-      - python=3.12
-      - pip:
-        - .[dev,plot]
+  environment: environment-rtd.yml
 
 sphinx:
   configuration: docs/conf.py

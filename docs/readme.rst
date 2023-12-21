@@ -4,6 +4,9 @@
 .. image:: https://github.com/VSPEC-collab/vspec-vsm/actions/workflows/python-package-conda.yml/badge.svg
     :target: https://github.com/VSPEC-collab/vspec-vsm/actions/workflows/python-package-conda.yml
 
+.. image:: https://readthedocs.org/projects/vspec-vsm/badge/?version=latest
+    :target: https://vspec-vsm.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 
 VSPEC Variable Star Model
@@ -15,10 +18,10 @@ stand-alone package.
 Installation
 ------------
 
-To install this (or your copy) locally, first clone the repository.
-Then navigate to the directory containting ``setup.py`` and 
-type
+Type ``pip install vspec-vsm`` in your terminal to install
+the package in your environment.
 
-    pip install -e .
+Docs
+----
 
-This will install the package locally in development mode.
+See the docs at `https://vspec-vsm.readthedocs.io <https://vspec-vsm.readthedocs.io>`_

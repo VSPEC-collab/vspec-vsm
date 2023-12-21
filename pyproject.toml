@@ -29,7 +29,7 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 astropy = "^6.0.0"
 numpy = "^1.26.2"
 jax = "^0.4.23"

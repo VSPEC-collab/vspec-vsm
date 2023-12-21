@@ -10,6 +10,7 @@ build:
     post_create_environment:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually
+      - conda activeate vspec-vsm
       - pipx install poetry==1.7.1
       # Tell poetry to not use a virtual environment
       # - poetry config virtualenvs.create false

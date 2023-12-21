@@ -42,11 +42,11 @@ pytest = "^7.4.2"
 
 [tool.poetry.group.docs.dependencies]
 furo = "2023.9.10"
-numpydoc = "^1.6.0"
-sphinx = "^7.2.6"
-sphinx-automodapi = "^0.16.0"
-sphinx-gallery = "^0.14.0"
-sphinxcontrib-bibtex = "^2.6.1"
+numpydoc
+sphinx
+sphinx-automodapi
+sphinx-gallery
+sphinxcontrib-bibtex
 
 [tool.poetry.group.plot.dependencies]
 matplotlib = "^3.8.0"

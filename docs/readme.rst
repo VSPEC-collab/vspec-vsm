@@ -1,3 +1,11 @@
+.. image:: https://coveralls.io/repos/github/VSPEC-collab/vspec-vsm/badge.svg
+:target: https://coveralls.io/github/VSPEC-collab/vspec-vsm
+
+.. image:: https://github.com/VSPEC-collab/vspec-vsm/actions/workflows/python-package-conda.yml/badge.svg
+:target: https://github.com/VSPEC-collab/vspec-vsm/actions/workflows/python-package-conda.yml
+
+
+
 VSPEC Variable Star Model
 =========================
 

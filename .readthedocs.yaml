@@ -4,23 +4,13 @@ build:
   os: ubuntu-22.04
   tools:
     python: "miniconda3-4.7"
-  jobs:
-    pre_create_environment:
-       - conda update --yes --quiet --name=base --channel=defaults conda
-    post_create_environment:
-      # Install poetry
-      # https://python-poetry.org/docs/#installing-manually
-      - pip install poetry
-      # Tell poetry to not use a virtual environment
-      # - poetry config virtualenvs.create false
-    post_install:
-      # Install dependencies with 'docs' dependency group
-      # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
-      - poetry install --with docs,dev,plot
-
-conda:
-  environment: environment-rtd.yml
-
-sphinx:
-  configuration: docs/source/conf.py
-
+  commands:
+    - conda create -n vspec-vsm python=3.11
+    - conda activate vspec-vsm
+    - python3 -m pip install --user pipx
+    - python3 -m pipx ensurepath
+    - pipx install poetry
+    - poetry install --with dev,docs,plot
+    - cd docs
+    - make html
+    - cp --recursive build/html $READTHEDOCS_OUTPUT/html/

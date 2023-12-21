@@ -1,3 +1,4 @@
 name: vspec-vsm
 dependencies:
   - python=3.12
+  - pip:

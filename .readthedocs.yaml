@@ -6,7 +6,7 @@ build:
     python: "miniconda3-4.7"
   commands:
     - conda create -n vspec-vsm python=3.9
-    - bash --login
+    - conda init bash
     - conda activate vspec-vsm
     - python3 -m pip install --user pipx
     - python3 -m pipx ensurepath

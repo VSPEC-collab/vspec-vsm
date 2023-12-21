@@ -1,8 +1,3 @@
 name: vspec-vsm
-channels:
-  - conda-forge
-  - defaults
 dependencies:
   - python=3.12
-  - pip:
-    - .[dev,plot,docs]

@@ -1,0 +1,21 @@
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.12"
+
+conda:
+  environment:
+    name: vspec-vsm
+    channels:
+      - conda-forge
+      - defaults
+    dependencies:
+      - python=3.12
+      - pip:
+        - .[dev,plot]
+
+sphinx:
+  configuration: docs/conf.py
+

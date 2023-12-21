@@ -17,7 +17,6 @@ build:
       # Install dependencies with 'docs' dependency group
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - poetry install --with docs,dev,plot
-      - python -c "from vspec_vsm import __version__; print(__version__)" >> /tmp/vsm_version.txt
 
 conda:
   environment: environment-rtd.yml

@@ -30,12 +30,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-astropy = "^6.0.0"
-numpy = "^1.26.2"
-jax = "^0.4.23"
-jaxlib = "^0.4.23"
-tinygp = "^0.2.4"
-importlib-metadata = {version = "^1.0", python = "<3.8"}
+astropy
+numpy
+jax
+jaxlib
+tinygp
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"

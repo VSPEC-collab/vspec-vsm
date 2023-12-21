@@ -5,6 +5,8 @@ build:
   tools:
     python: "miniconda3-4.7"
   jobs:
+    pre_create_environment:
+       - conda update --yes --quiet --name=base --channel=defaults conda
     post_create_environment:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually

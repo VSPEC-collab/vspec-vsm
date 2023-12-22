@@ -3,4 +3,4 @@ dependencies:
   - python=3.9
   - pip
   - pip:
-    - sphinx-automodapi
+    - .[docs,plot,dev]

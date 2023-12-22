@@ -1,20 +1,20 @@
-[tool.poetry]
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.
+
+[project]
+version = "0.3.0"
 name = "vspec-vsm"
-version = "0"
-description = "The VSPEC Variable Star Model as a standalone package."
 authors = [
-    "Ted Johnson <ted.johnson@unlv.edu>",
-    "Cameron Kelahan <cameron.kelahan@gmail.com>"
+    {name = "Ted Johnson", email = "ted.johnson@unlv.edu"},
+    { name = "Cameron Kelahan", email = "cameron.kelahan@gmail.com"}
 ]
-maintainers = [
-    "Ted Johnson <ted.johnson@unlv.edu>"
-]
-license = "MIT"
+maintainers = [ { name = "Ted Johnson", email = "ted.johnson@unlv.edu" } ]
+description = "The VSPEC Variable Star Model as a standalone package."
 readme = "docs/readme.rst"
-homepage = "https://vspec-vsm.readthedocs.io/en/latest/index.html#"
-repository = "https://github.com/VSPEC-collab/vspec-vsm"
-documentation = "https://vspec-vsm.readthedocs.io/en/latest/api.html"
-keywords = ["astronomy", "exoplanet"]
+license = {file = "LICENSE"}
+keywords =  ["astronomy", "star"]
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -26,35 +26,32 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "astropy",
+    "numpy",
+    "jax",
+    "tinygp",
 
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-astropy = ">=5.1.1"
-numpy = "*"
-jax = "*"
-jaxlib = "*"
-tinygp = "*"
+[project.optional-dependencies]
+plot = [
+    "matplotlib",
+    "cartopy"
+]
+dev = [
+    "pytest",
+    "pep8",
+    "furo==2023.9.10",
+    "numpydoc",
+    "sphinx",
+    "sphinx-automodapi",
+    "sphinx-gallery",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-napoleon",
+    "sphinxcontrib-bibtex",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "*"
-
-[tool.poetry.group.docs.dependencies]
-furo = "*"
-numpydoc = "*"
-sphinx = "*"
-sphinx-automodapi = "*"
-sphinx-gallery = "*"
-sphinxcontrib-bibtex = "*"
-
-[tool.poetry.group.plot.dependencies]
-matplotlib = "*"
-cartopy = "*"
-
-[tool.poetry-version-plugin]
-source = "init"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[project.urls]
+Repository = "https://github.com/VSPEC-collab/vspec-vsm"
+Issues = "https://github.com/VSPEC-collab/vspec-vsm/issues"

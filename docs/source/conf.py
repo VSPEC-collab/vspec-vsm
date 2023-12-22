@@ -9,7 +9,7 @@
 project = 'VSPEC-VSM'
 copyright = '2023, The VSPEC Collaboration'
 author = 'The VSPEC Collaboration'
-release = '0.3.3'
+release = "0.3.3"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

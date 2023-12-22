@@ -5,10 +5,6 @@ build:
   tools:
     python: "miniconda3-4.7"
   commands:
-    - ~/miniconda3/bin/conda init bash
-    - ~/miniconda3/bin/conda init zsh
-    - conda create -n vspec-vsm python=3.9
-    - conda activate vspec-vsm
     - python3 -m pip install --user pipx
     - python3 -m pipx ensurepath
     - pipx install poetry

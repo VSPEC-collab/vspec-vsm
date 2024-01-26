@@ -32,7 +32,8 @@ class GranulationKernel(kernels.Kernel):
     ----------
     .. [1] Gordon, T. A., Agol, E., & Foreman-Mackey, D. 2020, AJ, 160, 240
     """
-
+    scale: jnp.ndarray
+    freq: jnp.ndarray
     def __init__(self, scale, period):
         self.scale = jnp.atleast_1d(scale)
         self.freq = 1/jnp.atleast_1d(period)

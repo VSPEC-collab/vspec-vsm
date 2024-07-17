@@ -535,20 +535,20 @@ class Star:
             pix_has_teff = np.where(surface_map == teff, 1, 0)
             nominal_area = np.sum(pix_has_teff*ld*jacobian)
             covered_area = np.sum(pix_has_teff*ld*jacobian*(covered))
-            total_data[teff] = nominal_area/total_area
-            covered_data[teff] = covered_area/total_area
+            total_data[f'{teff:.2f}'] = nominal_area/total_area
+            covered_data[f'{teff:.2f}'] = covered_area/total_area
         granulation_teff = self.teff - self.granulation.dteff
         # initialize. This way it's okay if there's something else with that Teff too.
         if granulation_teff not in teffs:
-            total_data[granulation_teff] = 0
-            covered_data[granulation_teff] = 0
+            total_data[f'{granulation_teff:.2f}'] = 0
+            covered_data[f'{granulation_teff:.2f}'] = 0
 
-        phot_frac = total_data[self.teff]
-        total_data[self.teff] = phot_frac * (1-granulation_fraction)
-        total_data[granulation_teff] += phot_frac * granulation_fraction
-        phot_frac = covered_data[self.teff]
-        covered_data[self.teff] = phot_frac * (1-granulation_fraction)
-        covered_data[granulation_teff] += phot_frac * granulation_fraction
+        phot_frac = total_data[f'{self.teff:.2f}']
+        total_data[f'{self.teff:.2f}'] = phot_frac * (1-granulation_fraction)
+        total_data[f'{granulation_teff:.2f}'] += phot_frac * granulation_fraction
+        phot_frac = covered_data[f'{self.teff:.2f}']
+        covered_data[f'{self.teff:.2f}'] = phot_frac * (1-granulation_fraction)
+        covered_data[f'{granulation_teff:.2f}'] += phot_frac * granulation_fraction
 
         return total_data, covered_data, pl_frac
 

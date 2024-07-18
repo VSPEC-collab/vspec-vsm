@@ -28,7 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "astropy",
-    "numpy",
+    "numpy~=1.26",
     "jax",
     "tinygp",
 

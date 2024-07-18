@@ -31,9 +31,9 @@ from vspec_vsm.coordinate_grid import RectangularGrid, SpiralGrid
 # To be fair, we will use the same number of points for each example.
 
 NLAT = 50
-NLAT = 100
-rect = RectangularGrid(nlat=NLAT, nlon=NLAT)
-spiral = SpiralGrid(n_points=NLAT*NLAT)
+NLON = 100
+rect = RectangularGrid(nlat=NLAT, nlon=NLON)
+spiral = SpiralGrid(n_points=NLAT*NLON)
 
 fig, ax  = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -54,7 +54,7 @@ fig, ax  = plt.subplots(1, 2, figsize=(10, 5))
 for i, cg in enumerate([rect, spiral]):
     lats, lons = cg.grid()
     data = np.sin(2*lats)*np.cos(2*lons)
-    llat,llon,resampled_data = cg.display_grid(NLAT, NLAT, data)
+    llat,llon,resampled_data = cg.display_grid(NLAT, NLON, data)
     ax[i].pcolormesh(llon, llat, resampled_data.T)
     ax[i].set_xlabel('Longitude')
     ax[i].set_ylabel('Latitude')
@@ -75,21 +75,25 @@ for i, cg in enumerate([rect, spiral]):
 
 ten_deg_in_rad = np.pi*10/180
 
-NLAT = int(round(2*np.pi/ten_deg_in_rad))
-NLAT = NLAT//2
+NLON = int(round(2*np.pi/ten_deg_in_rad))
+NLAT = NLON//2
 
-rect = RectangularGrid(nlat=NLAT, nlon=NLAT)
-print(f'The rectangular grid requires {NLAT*NLAT} points.')
+rect = RectangularGrid(nlat=NLAT, nlon=NLON)
+print(f'The rectangular grid requires {NLAT*NLON} points.')
 
 n_points = int(round(4*np.pi/ten_deg_in_rad**2))
 spiral = SpiralGrid(n_points=n_points)
 
 #%%
+fig, ax  = plt.subplots(1, 2, figsize=(10, 5))
 print(f'The spiral grid requires {n_points} points.')
 for i, cg in enumerate([rect, spiral]):
     lats, lons = cg.grid()
     data = np.sin(2*lats)*np.cos(2*lons)
-    llat,llon,resampled_data = cg.display_grid(NLAT, NLAT, data)
+    try:
+        llat,llon,resampled_data = cg.display_grid(5*NLAT, 5*NLON, data)
+    except TypeError: # Rectangular grids don't support resampling -- there would be little point to it.
+        llat,llon,resampled_data = cg.display_grid(NLAT, NLON, data)
     ax[i].pcolormesh(llon, llat, resampled_data.T)
     ax[i].set_xlabel('Longitude')
     ax[i].set_ylabel('Latitude')

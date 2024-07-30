@@ -281,6 +281,23 @@ class Star:
         behind_star = mu < 0.
         mask[behind_star] = 0
         return mask
+    
+    def area_projection_coefficient(self, mu) -> np.ndarray:
+        """
+        Get the area projection coefficient for each point.
+
+        Parameters
+        ----------
+        mu : np.ndarray
+            The cosine of the angle from disk center
+
+        Returns
+        -------
+        area : np.ndarray
+            The area projection coefficient for each point
+        
+        """
+        return np.where(mu>0,mu,0)
 
     def ld_mask_for_plotting(self, mu) -> np.ndarray:
         """
@@ -514,8 +531,11 @@ class Star:
             The fraction of the planet that is visble. This is in case of an eclipse.
         """
         cos_c = self.get_mu(sub_obs_coords['lat'], sub_obs_coords['lon'])
-        ld = self.ld_mask(cos_c)
+        # ld = self.ld_mask(cos_c)
+        ld = self.ld_mask_for_plotting(cos_c)
+        
         jacobian = self.get_jacobian()
+        proj_area = jacobian*self.area_projection_coefficient(cos_c)
 
         surface_map = self.add_faculae_to_map(
             sub_obs_coords['lat'], sub_obs_coords['lon'])
@@ -530,11 +550,11 @@ class Star:
         teffs = np.unique(surface_map)
         total_data = {}
         covered_data = {}
-        total_area = np.sum(ld*jacobian)
+        total_area = np.sum(ld*proj_area)
         for teff in teffs:
             pix_has_teff = np.where(surface_map == teff, 1, 0)
-            nominal_area = np.sum(pix_has_teff*ld*jacobian)
-            covered_area = np.sum(pix_has_teff*ld*jacobian*(covered))
+            nominal_area = np.sum(pix_has_teff*ld*proj_area)
+            covered_area = np.sum(pix_has_teff*ld*proj_area*(covered))
             total_data[f'{teff:.2f}'] = nominal_area/total_area
             covered_data[f'{teff:.2f}'] = covered_area/total_area
         granulation_teff = self.teff - self.granulation.dteff
@@ -660,7 +680,7 @@ class Star:
         mu = self.get_mu(lat0, lon0)
         ld = self.ld_mask_for_plotting(mu)
         alpha = 1-ld.T/np.max(ld.T)
-        ax.imshow(np.ones_like(ld), extent=(lons.min(), lons.max(), lats.min(), lats.max()),
+        ax.imshow(np.ones_like(ld), extent=(0, 360, -90, 90),
                   transform=ccrs.PlateCarree(), origin='lower', alpha=alpha, cmap=plt.cm.get_cmap('gray'), zorder=100)
 
     def get_flares_over_observation(self, time_duration: Quantity):

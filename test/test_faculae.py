@@ -68,12 +68,12 @@ def test_facula_effective_area():
     depth = 0*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 0*u.deg
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert d[dtwall] == 0*aunit
     assert d[dtfloor].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2).to_value(aunit), rel=1e-3)
     angle = 5*u.deg
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert d[dtwall] == 0*aunit
     assert d[dtfloor].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -82,7 +82,7 @@ def test_facula_effective_area():
     depth = 1e9*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 5*u.deg
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert d[dtfloor] == 0*aunit
     assert d[dtwall].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -91,17 +91,17 @@ def test_facula_effective_area():
     depth = 100*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 5*u.deg
-    d1 = fac.effective_area(angle, n_points=201)
+    d1 = fac.effective_area(angle)
     angle = 6*u.deg
-    d2 = fac.effective_area(angle, n_points=201)
+    d2 = fac.effective_area(angle)
     assert d1[dtfloor]/d1[dtwall] > d2[dtfloor]/d2[dtwall]
     assert d1[dtfloor] > d2[dtfloor]
     assert d1[dtwall] < d2[dtwall]
     angle = np.arctan(2*radius/depth)  # critical
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert d[dtfloor].to_value(aunit) == pytest.approx(0, abs=1e-6)
     angle = np.arctan(2*radius/depth) - 1*u.deg  # not quite critical
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert not d[dtfloor].to_value(aunit) == pytest.approx(0, abs=1e-6)
     # threshold not reached case
     radius = 100*u.km
@@ -110,7 +110,7 @@ def test_facula_effective_area():
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor,
                       wall_teff_intercept=dtwall, Zw=depth, floor_teff_min_rad=threshold)
     angle = 5*u.deg
-    d = fac.effective_area(angle, n_points=201)
+    d = fac.effective_area(angle)
     assert d[dtfloor] == 0*aunit
     assert d[dtwall].to_value(aunit) == pytest.approx(
         (np.pi*(radius)**2*np.cos(angle)).to_value(aunit), rel=1e-3)
@@ -126,15 +126,15 @@ def test_facula_fractional_effective_area():
     depth = 100*u.km
     fac = init_facula(r_init=radius, floor_teff_base_dteff=dtfloor, wall_teff_intercept=dtwall, Zw=depth)
     angle = 0*u.deg
-    d = fac.fractional_effective_area(angle, n_points=201)
+    d = fac.fractional_effective_area(angle)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
     angle = 5*u.deg
-    d = fac.fractional_effective_area(angle, n_points=201)
+    d = fac.fractional_effective_area(angle)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
     angle = 90*u.deg
-    d = fac.fractional_effective_area(angle, n_points=201)
+    d = fac.fractional_effective_area(angle)
     assert (d[dtfloor]+d[dtwall]
             ).to_value(u.dimensionless_unscaled) == pytest.approx(1.0, rel=1e-6)
 

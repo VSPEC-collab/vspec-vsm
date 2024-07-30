@@ -24,7 +24,7 @@ from astropy import units as u
 from astropy.units.quantity import Quantity
 
 from vspec_vsm.coordinate_grid import CoordinateGrid
-from vspec_vsm.helpers import round_teff
+from vspec_vsm.helpers import round_teff, calc_circ_fraction_inside_unit_circle
 from vspec_vsm import config
 
 
@@ -225,7 +225,7 @@ class Facula:
         else:
             self.radius = self.radius * np.exp(-2*time/self.lifetime)
 
-    def effective_area(self, angle, n_points=101):
+    def effective_area(self, angle):
         """
         Calculate the effective area of the floor and walls when projected on a disk.
 
@@ -233,8 +233,6 @@ class Facula:
         ----------
         angle : astropy.units.Quantity 
             Angle from disk center.
-        n_points : int, optional
-            Number of points to sample the facula with. Default is 101.
 
         Returns
         -------
@@ -242,46 +240,7 @@ class Facula:
             Effective area of the wall and floor. The keys are the Teff, the
             values are the area. Both are `astropy.units.Quantity` objects.
 
-        Notes
-        -----
-        The effective area is computed by numerical integration. The visible area of the
-        hot wall is:
-
-        .. math::
-            \\int _{-R}^{R} Z_{\\rm eff} dr
-
-        and the visible area of the cool floor is:
-
-        .. math::
-            \\int _{-R}^{R} Z_{\\rm eff} dr
-
-        Where
-
-        .. math::
-            Z_{\\rm eff} = \\left\\{
-                \\begin{array}{lr}
-                    Z_w \\sin{\\alpha}, & \\text{if } \\alpha \\leq \\alpha_{\\rm crit} \\\\
-                    2\\sqrt{R^2 - r^2}\\cos{\\alpha}, & \\text{if } \\alpha > \\alpha_{\\rm crit}
-                \\end{array}
-                \\right\\}
-
-        and
-
-        .. math::
-            R_{\\rm eff} = \\left\\{
-                \\begin{array}{lr}
-                    2\\sqrt{R^2 - r^2} - Z_w\\sin{\\alpha}, & \\text{if }
-                    \\alpha \\leq \\alpha_{\\rm crit} \\\\
-                    0, & \\text{if } \\alpha > \\alpha_{\\rm crit}
-                \\end{array}
-                \\right\\}
-
-        for facula radius :math:`R`, depth :math:`Z_w`, and angle from disk-center
-        :math:`\\alpha`. :math:`r` in this numerical scheme is defined as the distance
-        from the center of the facula along the radial line connecting the facula
-        center to the disk center. :math:`\\alpha_{\\rm crit}` is the value of alpha
-        at which the floor is no longer visible and is defined to be
-        :math:`\\arctan{\\frac{2\\sqrt{R^2-r^2}}{Z_w}}`. 
+        
         """
         if self.floor_dteff == self.wall_dteff:
             raise ValueError(
@@ -292,25 +251,17 @@ class Facula:
                 round_teff(self.floor_dteff): 0.0 * u.km**2
             }
         else:
-            # distance from center along azmuth of disk
-            x = np.linspace(-1, 1, n_points) * self.radius
-            # effective radius of the 1D facula approximation
-            h = np.sqrt(self.radius**2 - x**2)
-            critical_angles = np.ones_like(
-                h.value)*90*u.deg if self.depth == 0*u.km else np.arctan(2*h/self.depth)
-            z_effs = np.sin(angle)*np.ones(n_points) * self.depth
-            r_effs = np.cos(angle)*h*2 - self.depth * np.sin(angle)
-            no_floor = critical_angles < angle
-            z_effs[no_floor] = 2*h[no_floor]*np.cos(angle)
-            r_effs[no_floor] = 0
-
+            depth_over_radius = (self.depth/self.radius).to_value(u.dimensionless_unscaled)
+            wall_frac = 1 - calc_circ_fraction_inside_unit_circle(
+                depth_over_radius*np.tan(angle).to_value(u.dimensionless_unscaled), 0, 1
+            )
+            proj_area = np.pi * self.radius**2 * np.cos(angle)
             return {
-                round_teff(self.wall_dteff): np.trapz(z_effs, x),
-                round_teff(self.floor_dteff): np.trapz(r_effs, x)
+                round_teff(self.wall_dteff): wall_frac*proj_area,
+                round_teff(self.floor_dteff): (1-wall_frac)*proj_area
             }
 
-    def fractional_effective_area(self, angle: Quantity,
-                                  n_points: int = 101) -> Dict[Quantity, Quantity]:
+    def fractional_effective_area(self, angle: Quantity) -> Dict[Quantity, Quantity]:
         """
         Calculate the fractional effective area as a fraction of the
         projected area of a region of quiet photosphere with
@@ -320,16 +271,14 @@ class Facula:
         ----------
         angle : astropy.units.Quantity
             Angle from disk center.
-        N : int, default=101
-            Number of points to sample the facula with.
 
         Returns
         -------
-        dict
+        dictn_points=n_points
             Fractional effective area of the wall and floor. Keys are Teff.
 
         """
-        effective_area = self.effective_area(angle, n_points=n_points)
+        effective_area = self.effective_area(angle)
         frac_eff_area = {}
         total = 0
         for _, area in effective_area.items():

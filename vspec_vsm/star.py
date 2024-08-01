@@ -634,7 +634,8 @@ class Star:
         phase: u.Quantity = 90*u.deg,
         inclination: u.Quantity = 0*u.deg,
         nlon: int = 1000,
-        nlat: int = 500
+        nlat: int = 500,
+        rasterize: bool = True
     ):
         """
         Add the transit to the surface map and plot.
@@ -668,7 +669,8 @@ class Star:
         lons = (lons*u.rad).to_value(u.deg)
         data = data.to_value(u.K)
         im = ax.pcolormesh(lons, lats, data.T,
-                           transform=ccrs.PlateCarree())
+                           transform=ccrs.PlateCarree(),
+                           rasterized=rasterize)
         plt.colorbar(im, ax=ax, label=r'$T_{\rm eff}$ (K)')
 
         _, _, data = self.gridmaker.display_grid(nlat, nlon, covered)

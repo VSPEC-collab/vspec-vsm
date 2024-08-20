@@ -773,5 +773,10 @@ class Star:
         if self.granulation is None:
             return np.zeros(shape=time.shape)
         else:
-            coverage = self.granulation.get_coverage(time)
-            return np.where(np.isnan(coverage), 0, coverage)
+            if self.granulation.dteff == 0*u.K or (self.granulation.params['mean'] == 0 and self.granulation.params['amp'] == 0):
+                shape = time.shape
+                arr = np.zeros(shape=shape)
+                return arr
+            else:
+                coverage = self.granulation.get_coverage(time)
+                return np.where(np.isnan(coverage), 0, coverage)
